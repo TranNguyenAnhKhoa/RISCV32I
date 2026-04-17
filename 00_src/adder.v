@@ -1,0 +1,11 @@
+
+module adder(
+    input  [31:0]   A_i,
+    input  [31:0]   B_i,
+
+    output [31:0]   C_o
+);
+    
+    assign C_o = A_i + B_i;
+
+endmodule

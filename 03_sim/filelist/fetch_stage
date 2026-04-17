@@ -1,0 +1,4 @@
+-y ../00_src/Fetch_stage
+-y ../00_src/Fetch_stage/rtl
+
+../00_src/Fetch_stage/test.sv
