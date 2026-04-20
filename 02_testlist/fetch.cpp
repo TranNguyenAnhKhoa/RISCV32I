@@ -16,8 +16,8 @@
 
 #include "Vtop.h"
 
-#define MAX_SIM_TIME 10000
-#define TIME_RST 4
+#define MAX_SIM_TIME 200
+#define TIME_RST 5
 
 #define POLY_N  256
 #define POLY_Q  8380417
@@ -75,6 +75,7 @@ int main(int argc, char** argv, char** env) {
         
         if (sim_time >= TIME_RST && top->clk_i == 0) {
             //tb
+            top->write_PC_en_i = 1;
             
         }
         sim_time++;

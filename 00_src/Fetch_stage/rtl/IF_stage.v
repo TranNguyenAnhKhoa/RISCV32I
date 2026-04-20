@@ -14,7 +14,6 @@ module IF_stage(
     //----------------------------------------
     //              WIRE & REG
     //----------------------------------------
-    wire [31:0] addr_plus4_w    ;
     wire [31:0] addr_next_w     ;
     wire [31:0] addr_current_w  ;
     wire [31:0] instruction_w   ;
@@ -25,8 +24,7 @@ module IF_stage(
     // ----------------------------------------------
     //          Combinational logic
     // ----------------------------------------------
-    assign addr_next_w      = (!branch_i) ? addr_plus4_w : addr_branch_i;
-    assign addr_plus4_w     = addr_current_w + 32'h0000_0004;
+    assign addr_next_w      = (!branch_i) ? (addr_current_w + 32'h0000_0004) : addr_branch_i;
     assign instruction_o    = (flush_i) ? 32'h0000_0000 : instruction_r ;
     assign addr_current_o   = (flush_i) ? 32'h0000_0000 : addr_current_r ;
 

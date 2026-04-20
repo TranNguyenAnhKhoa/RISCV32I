@@ -22,8 +22,6 @@ VL_ATTR_COLD void Vtop___024root___eval_initial(Vtop___024root* vlSelf) {
     vlSelf->__Vm_traceActivity[1U] = 1U;
     vlSelf->__Vm_traceActivity[0U] = 1U;
     vlSelf->__Vtrigprevexpr___TOP__clk_i__0 = vlSelf->clk_i;
-    vlSelf->__Vtrigprevexpr___TOP__top__DOT__clk_l__0 
-        = vlSelf->top__DOT__clk_l;
 }
 
 extern const VlWide<16>/*511:0*/ Vtop__ConstPool__CONST_h69629458_0;
@@ -147,9 +145,6 @@ VL_ATTR_COLD void Vtop___024root___dump_triggers__act(Vtop___024root* vlSelf) {
     if ((1ULL & vlSelf->__VactTriggered.word(0U))) {
         VL_DBG_MSGF("         'act' region trigger index 0 is active: @(posedge clk_i)\n");
     }
-    if ((2ULL & vlSelf->__VactTriggered.word(0U))) {
-        VL_DBG_MSGF("         'act' region trigger index 1 is active: @(posedge top.clk_l)\n");
-    }
 }
 #endif  // VL_DEBUG
 
@@ -164,9 +159,6 @@ VL_ATTR_COLD void Vtop___024root___dump_triggers__nba(Vtop___024root* vlSelf) {
     }
     if ((1ULL & vlSelf->__VnbaTriggered.word(0U))) {
         VL_DBG_MSGF("         'nba' region trigger index 0 is active: @(posedge clk_i)\n");
-    }
-    if ((2ULL & vlSelf->__VnbaTriggered.word(0U))) {
-        VL_DBG_MSGF("         'nba' region trigger index 1 is active: @(posedge top.clk_l)\n");
     }
 }
 #endif  // VL_DEBUG
@@ -184,8 +176,6 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
     vlSelf->addr_branch_i = VL_RAND_RESET_I(32);
     vlSelf->instruction_o = VL_RAND_RESET_I(32);
     vlSelf->addr_current_o = VL_RAND_RESET_I(32);
-    vlSelf->top__DOT__clk_l = VL_RAND_RESET_I(1);
-    vlSelf->top__DOT__rstn_l = VL_RAND_RESET_I(1);
     vlSelf->top__DOT__IF_stage_inst__DOT__addr_next_w = VL_RAND_RESET_I(32);
     vlSelf->top__DOT__IF_stage_inst__DOT__addr_current_r = VL_RAND_RESET_I(32);
     vlSelf->top__DOT__IF_stage_inst__DOT__instruction_r = VL_RAND_RESET_I(32);
@@ -194,7 +184,6 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
         vlSelf->top__DOT__IF_stage_inst__DOT__IMEM_inst0__DOT__imem[__Vi0] = VL_RAND_RESET_I(8);
     }
     vlSelf->__Vtrigprevexpr___TOP__clk_i__0 = VL_RAND_RESET_I(1);
-    vlSelf->__Vtrigprevexpr___TOP__top__DOT__clk_l__0 = VL_RAND_RESET_I(1);
     for (int __Vi0 = 0; __Vi0 < 2; ++__Vi0) {
         vlSelf->__Vm_traceActivity[__Vi0] = 0;
     }

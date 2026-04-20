@@ -1,10 +1,11 @@
 module comparator(
-    input       [31:0]  i_input1, i_input2,
-    input       [2:0]   i_funct3,
-    output reg          o_branch_taken // take the branch or not
+    input   [31:0] A_i, 
+    input   [31:0] B_i,
+    input   [2:0]  funct3_i,
+    output         branch_taken_o // take the branch or not
 
 );
-    wire w_equal, w_slt, w_ult;
+    wire equal_w, slt_w, ult_w;
 // take the branch if ....
     parameter   equal                   = 3'b000,
                 not_equal               = 3'b001,
@@ -13,17 +14,17 @@ module comparator(
                 less_than_u             = 3'b110,
                 greater_than_or_eq_u    = 3'b111;
     
-    assign w_equal  = (i_input1 == i_input2);
-    assign w_ult    = (i_input1 < i_input2);
+    assign equal_w  = (A_i == B_i);
+    assign ult_w    = (A_i < B_i);
     always @(*) begin
-        case (i_funct3)
-            equal               : o_branch_taken = (w_equal ) ? 1:0;
-            not_equal           : o_branch_taken = (~w_equal) ? 1:0;
-            less_than           : o_branch_taken = (i_input1[31] != i_input2[31]) ? i_input1[31]:w_ult ; // signed
-            greater_than_or_eq  : o_branch_taken = (i_input1[31] != i_input2[31]) ? i_input2[31]:~w_ult ; // signed
-            less_than_u         : o_branch_taken = (w_ult) ? 1:0;
-            greater_than_or_eq_u: o_branch_taken = (~w_ult) ? 1:0 ;
-            default             : o_branch_taken = 0;
+        case (funct3_i)
+            equal                : branch_taken_o = (equal_w ) ? 1:0;
+            not_equal            : branch_taken_o = (~equal_w) ? 1:0;
+            less_than            : branch_taken_o = (A_i[31] != B_i[31]) ? A_i[31]:ult_w ; // signed
+            greater_than_or_eq   : branch_taken_o = (A_i[31] != B_i[31]) ? B_i[31]:~ult_w ; // signed
+            less_than_u          : branch_taken_o = (ult_w)  ? 1:0;
+            greater_than_or_eq_u : branch_taken_o = (~ult_w) ? 1:0 ;
+            default              : branch_taken_o = 0;
         endcase
     end
     

@@ -13,9 +13,9 @@ module top(
     logic clk_l;
     logic rstn_l;
 
-    always @(posedge clk_i) begin
-        clk_l <= clk_i;
-        rstn_l <= rstn_i;
+    always @(*) begin
+        clk_l = clk_i;
+        rstn_l = rstn_i;
     end
 
     IF_stage IF_stage_inst(
