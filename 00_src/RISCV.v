@@ -45,18 +45,15 @@ module RISCV(
     wire        w_flush, w_write_PC, w_control_mux;
     wire [1:0]  w_forwarding_mux_ALU1, w_forwarding_mux_ALU2;
 
-
-    IF_stage IF_stage_inst0(
-        .i_clk          (i_clk              ), 
-        .i_rstn         (i_rstn             ),
-        
-        .i_flush        (w_flush            ),
-        .i_write_PC     (w_write_PC         ),
-        
-        .i_is_branch    (w_branch_taken_d   ),
-        .i_addr_branch  (w_addr_branch_mem  ),
-        .o_instruction  (w_instruction_f    ),
-        .o_addr_current (w_addr_current_f   )
+    IF_stage IF_stage_inst(
+        .clk_i          (clk_l         ),
+        .rstn_i         (rstn_l        ),
+        .branch_i       (branch_i      ),
+        .flush_i        (flush_i       ),
+        .write_PC_en_i  (write_PC_en_i ),
+        .addr_branch_i  (addr_branch_i ),
+        .instruction_o  (instruction_o ),
+        .addr_current_o (addr_current_o)    
     );
 
     ID_stage ID_stage_inst0(
