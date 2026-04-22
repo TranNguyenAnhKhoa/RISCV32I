@@ -1,0 +1,4 @@
+-y ../00_src/Decode_stage
+-y ../00_src/Decode_stage/rtl
+
+../00_src/Decode_stage/ID_if.sv

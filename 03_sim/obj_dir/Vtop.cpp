@@ -12,12 +12,23 @@ Vtop::Vtop(VerilatedContext* _vcontextp__, const char* _vcname__)
     , vlSymsp{new Vtop__Syms(contextp(), _vcname__, this)}
     , clk_i{vlSymsp->TOP.clk_i}
     , rstn_i{vlSymsp->TOP.rstn_i}
-    , branch_i{vlSymsp->TOP.branch_i}
-    , flush_i{vlSymsp->TOP.flush_i}
-    , write_PC_en_i{vlSymsp->TOP.write_PC_en_i}
-    , addr_branch_i{vlSymsp->TOP.addr_branch_i}
-    , instruction_o{vlSymsp->TOP.instruction_o}
+    , hz_ctrl_i{vlSymsp->TOP.hz_ctrl_i}
+    , write_rd_i{vlSymsp->TOP.write_rd_i}
+    , reg_write_en_i{vlSymsp->TOP.reg_write_en_i}
+    , ctrl_branch_o{vlSymsp->TOP.ctrl_branch_o}
+    , ctrl_mem_read_o{vlSymsp->TOP.ctrl_mem_read_o}
+    , ctrl_mem_to_reg_o{vlSymsp->TOP.ctrl_mem_to_reg_o}
+    , ctrl_mem_write_o{vlSymsp->TOP.ctrl_mem_write_o}
+    , ctrl_ALUsrc_o{vlSymsp->TOP.ctrl_ALUsrc_o}
+    , ctrl_reg_write_o{vlSymsp->TOP.ctrl_reg_write_o}
+    , ctrl_ALUOp_o{vlSymsp->TOP.ctrl_ALUOp_o}
+    , instruction_i{vlSymsp->TOP.instruction_i}
+    , addr_current_i{vlSymsp->TOP.addr_current_i}
+    , write_back_data_i{vlSymsp->TOP.write_back_data_i}
+    , rd1_o{vlSymsp->TOP.rd1_o}
+    , rd2_o{vlSymsp->TOP.rd2_o}
     , addr_current_o{vlSymsp->TOP.addr_current_o}
+    , imm_gen_o{vlSymsp->TOP.imm_gen_o}
     , rootp{&(vlSymsp->TOP)}
 {
     // Register model with the context

@@ -1,4 +1,4 @@
-module test(
+module IF_if(
     input  logic         clk_i         , 
     input  logic         rstn_i        ,
     input  logic         branch_i     ,

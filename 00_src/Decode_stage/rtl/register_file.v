@@ -47,41 +47,41 @@ module register_file(
     reg [31:0] reg_r31_q;
 
     // simulation friendly names
-    wire x0_zero_w  = 32'h0000_0000;
-    wire x1_ra_w    =   reg_r1_q;
-    wire x2_sp_w    =   reg_r2_q;
-    wire x3_gp_w    =   reg_r3_q;
-    wire x4_tp_w    =   reg_r4_q;
-    wire x5_t0_w    =   reg_r5_q;
-    wire x6_t1_w    =   reg_r6_q;
-    wire x7_t2_w    =   reg_r7_q;
-    wire x8_s0_w    =   reg_r8_q;
-    wire x9_s1_w    =   reg_r9_q;
-    wire x10_a0_w   =   reg_r10_q;
-    wire x11_a1_w   =   reg_r11_q;
-    wire x12_a2_w   =   reg_r12_q;
-    wire x13_a3_w   =   reg_r13_q;
-    wire x14_a4_w   =   reg_r14_q;
-    wire x15_a5_w   =   reg_r15_q;
-    wire x16_a6_w   =   reg_r16_q;
-    wire x17_a7_w   =   reg_r17_q;
-    wire x18_s2_w   =   reg_r18_q;
-    wire x19_s3_w   =   reg_r19_q;
-    wire x20_s4_w   =   reg_r20_q;
-    wire x21_s5_w   =   reg_r21_q;
-    wire x22_s6_w   =   reg_r22_q;
-    wire x23_s7_w   =   reg_r23_q;
-    wire x24_s8_w   =   reg_r24_q;
-    wire x25_s9_w   =   reg_r25_q;
-    wire x26_s10_w  =   reg_r26_q;
-    wire x27_s11_w  =   reg_r27_q;
-    wire x28_t3_w   =   reg_r28_q;
-    wire x29_t4_w   =   reg_r29_q;
-    wire x30_t5_w   =   reg_r30_q;
-    wire x31_t6_w   =   reg_r31_q;
+    wire [31:0] x0_zero_w  = 32'h0000_0000;
+    wire [31:0] x1_ra_w    =   reg_r1_q;
+    wire [31:0] x2_sp_w    =   reg_r2_q;
+    wire [31:0] x3_gp_w    =   reg_r3_q;
+    wire [31:0] x4_tp_w    =   reg_r4_q;
+    wire [31:0] x5_t0_w    =   reg_r5_q;
+    wire [31:0] x6_t1_w    =   reg_r6_q;
+    wire [31:0] x7_t2_w    =   reg_r7_q;
+    wire [31:0] x8_s0_w    =   reg_r8_q;
+    wire [31:0] x9_s1_w    =   reg_r9_q;
+    wire [31:0] x10_a0_w   =   reg_r10_q;
+    wire [31:0] x11_a1_w   =   reg_r11_q;
+    wire [31:0] x12_a2_w   =   reg_r12_q;
+    wire [31:0] x13_a3_w   =   reg_r13_q;
+    wire [31:0] x14_a4_w   =   reg_r14_q;
+    wire [31:0] x15_a5_w   =   reg_r15_q;
+    wire [31:0] x16_a6_w   =   reg_r16_q;
+    wire [31:0] x17_a7_w   =   reg_r17_q;
+    wire [31:0] x18_s2_w   =   reg_r18_q;
+    wire [31:0] x19_s3_w   =   reg_r19_q;
+    wire [31:0] x20_s4_w   =   reg_r20_q;
+    wire [31:0] x21_s5_w   =   reg_r21_q;
+    wire [31:0] x22_s6_w   =   reg_r22_q;
+    wire [31:0] x23_s7_w   =   reg_r23_q;
+    wire [31:0] x24_s8_w   =   reg_r24_q;
+    wire [31:0] x25_s9_w   =   reg_r25_q;
+    wire [31:0] x26_s10_w  =   reg_r26_q;
+    wire [31:0] x27_s11_w  =   reg_r27_q;
+    wire [31:0] x28_t3_w   =   reg_r28_q;
+    wire [31:0] x29_t4_w   =   reg_r29_q;
+    wire [31:0] x30_t5_w   =   reg_r30_q;
+    wire [31:0] x31_t6_w   =   reg_r31_q;
 
-    always @(posedge clk_i) begin
-        if(rstn_i) begin
+    always @(posedge clk_i or negedge rstn_i) begin
+        if(!rstn_i) begin
             reg_r1_q  <= 32'h0000_0000;
             reg_r2_q  <= 32'h0000_0000;
             reg_r3_q  <= 32'h0000_0000;

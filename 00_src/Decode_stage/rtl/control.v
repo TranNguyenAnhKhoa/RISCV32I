@@ -5,18 +5,10 @@ module control(
     output       mem_read_o, 
     output       mem_to_reg_o, 
     output       mem_write_o, 
-    output       ALU_src_o, 
+    output       ALUsrc_o, 
     output       reg_write_o,
     output [1:0] ALUOp_o
 );
-
-    reg         branch_r    ; 
-    reg         mem_read_r  ; 
-    reg         mem_to_reg_r; 
-    reg         mem_write_r ; 
-    reg         ALU_src_r   ; 
-    reg         reg_write_r ;
-    reg [1:0]   ALUOp_r     ;
 
     parameter   // I-type
                 Load    = 7'b0000011, // load instructions
@@ -38,120 +30,126 @@ module control(
                 // J-type
                 jal     = 7'b1101111; // jump and link
     
-    wire    [6:0] opcode;
-
+    wire [6:0]  opcode      ;
+    reg         branch_r    ; 
+    reg         mem_read_r  ; 
+    reg         mem_to_reg_r; 
+    reg         mem_write_r ; 
+    reg         ALUsrc_r   ; 
+    reg         reg_write_r ;
+    reg [1:0]   ALUOp_r     ;
     
     assign opcode       = instruction_i[6:0];
     assign branch_o     = branch_r      ;
     assign mem_read_o   = mem_read_r    ;
     assign mem_to_reg_o = mem_to_reg_r  ;
     assign mem_write_o  = mem_write_r   ;
-    assign ALU_src_o    = ALU_src_r     ;
+    assign ALUsrc_o     = ALUsrc_r      ;
     assign reg_write_o  = reg_write_r   ;
     assign ALUOp_o      = ALUOp_r       ;
 
     always @(*) begin
 
-        ALUOp_o     = 2'b00; 
-        ALU_src_o   = 1'b0;  
-        mem_write_o = 1'b0; 
-        mem_read_o  = 1'b0; 
-        mem_to_reg_o= 1'b0; 
-        reg_write_o = 1'b0;
-        branch_o    = 1'b0;
+        ALUOp_r      = 2'b00; 
+        ALUsrc_r     = 1'b0;  
+        mem_write_r  = 1'b0; 
+        mem_read_r   = 1'b0; 
+        mem_to_reg_r = 1'b0; 
+        reg_write_r  = 1'b0;
+        branch_r     = 1'b0;
 
         case (opcode)
             Load: begin
-                ALUOp_o     = 2'b01; 
-                ALU_src_o   = 1'b1;  
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b1; 
-                mem_to_reg_o= 1'b1; 
-                reg_write_o = 1'b1;
-                branch_o    = 1'b0;
+                ALUOp_r     = 2'b01; 
+                ALUsrc_r   = 1'b1;  
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b1; 
+                mem_to_reg_r= 1'b1; 
+                reg_write_r = 1'b1;
+                branch_r    = 1'b0;
             end
             R_type: begin
-                ALUOp_o     = 2'b00;
-                ALU_src_o   = 1'b0;
-                mem_write_o = 1'b0;
-                mem_read_o  = 1'b0;
-                mem_to_reg_o= 1'b0;
-                reg_write_o = 1'b1;
-                branch_o    = 1'b0;
+                ALUOp_r     = 2'b00;
+                ALUsrc_r   = 1'b0;
+                mem_write_r = 1'b0;
+                mem_read_r  = 1'b0;
+                mem_to_reg_r= 1'b0;
+                reg_write_r = 1'b1;
+                branch_r    = 1'b0;
             end
             Imm_A_L: begin
-                ALUOp_o     = 2'b10; 
-                ALU_src_o   = 1'b1; 
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b0;
-                mem_to_reg_o= 1'b0; 
-                reg_write_o = 1'b1;
-                branch_o    = 1'b0;
+                ALUOp_r     = 2'b10; 
+                ALUsrc_r   = 1'b1; 
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b0;
+                mem_to_reg_r= 1'b0; 
+                reg_write_r = 1'b1;
+                branch_r    = 1'b0;
             end
 
             Store: begin
-                ALUOp_o     = 2'b01; 
-                ALU_src_o   = 1'b1;  
-                mem_write_o = 1'b1; 
-                mem_read_o  = 1'b0; 
-                mem_to_reg_o= 1'bx; 
-                reg_write_o = 1'b0;
-                branch_o    = 1'bx;
+                ALUOp_r     = 2'b01; 
+                ALUsrc_r   = 1'b1;  
+                mem_write_r = 1'b1; 
+                mem_read_r  = 1'b0; 
+                mem_to_reg_r= 1'bx; 
+                reg_write_r = 1'b0;
+                branch_r    = 1'bx;
             end
             B_type: begin
-                ALUOp_o     = 2'b10; 
-                ALU_src_o   = 1'b0;  
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b0; 
-                mem_to_reg_o= 1'bx; 
-                reg_write_o = 1'b0;
-                branch_o    = 1'bx;
+                ALUOp_r     = 2'b10; 
+                ALUsrc_r   = 1'b0;  
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b0; 
+                mem_to_reg_r= 1'bx; 
+                reg_write_r = 1'b0;
+                branch_r    = 1'bx;
             end
             Lui: begin
-                ALUOp_o     = 2'b11; 
-                ALU_src_o   = 1'b1;  
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b0; 
-                mem_to_reg_o= 1'b0; 
-                reg_write_o = 1'b1;
-                branch_o    = 1'b0;
+                ALUOp_r     = 2'b11; 
+                ALUsrc_r   = 1'b1;  
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b0; 
+                mem_to_reg_r= 1'b0; 
+                reg_write_r = 1'b1;
+                branch_r    = 1'b0;
             end
             jal: begin
-                ALUOp_o     = 2'bxx; 
-                ALU_src_o   = 1'b0; 
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b0; 
-                mem_to_reg_o= 1'bx; 
-                reg_write_o = 1'b1;
-                branch_o    = 1'b1;
+                ALUOp_r     = 2'bxx; 
+                ALUsrc_r   = 1'b0; 
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b0; 
+                mem_to_reg_r= 1'bx; 
+                reg_write_r = 1'b1;
+                branch_r    = 1'b1;
             end
             
             jalr: begin
-                ALUOp_o     = 2'bxx; 
-                ALU_src_o   = 1'bx; 
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b0; 
-                mem_to_reg_o= 1'bx; 
-                reg_write_o = 1'b1;
-                branch_o    = 1'b1;
+                ALUOp_r     = 2'bxx; 
+                ALUsrc_r   = 1'bx; 
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b0; 
+                mem_to_reg_r= 1'bx; 
+                reg_write_r = 1'b1;
+                branch_r    = 1'b1;
             end
             auipc: begin
-                ALUOp_o     = 2'bxx; 
-                ALU_src_o   = 1'bx; 
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b0; 
-                mem_to_reg_o= 1'bx; 
-                reg_write_o = 1'b1;
-                branch_o    = 1'b1;
+                ALUOp_r     = 2'bxx; 
+                ALUsrc_r   = 1'bx; 
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b0; 
+                mem_to_reg_r= 1'bx; 
+                reg_write_r = 1'b1;
+                branch_r    = 1'b1;
             end
             default: begin
-                ALUOp_o     = 2'b00; 
-                ALU_src_o   = 1'b0; 
-                mem_write_o = 1'b0; 
-                mem_read_o  = 1'b0; 
-                mem_to_reg_o= 1'b0; 
-                reg_write_o = 1'b0;
-                branch_o    = 1'b0;
+                ALUOp_r     = 2'b00; 
+                ALUsrc_r   = 1'b0; 
+                mem_write_r = 1'b0; 
+                mem_read_r  = 1'b0; 
+                mem_to_reg_r= 1'b0; 
+                reg_write_r = 1'b0;
+                branch_r    = 1'b0;
             end
         endcase
     end

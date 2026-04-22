@@ -12,7 +12,7 @@ module IF_stage(
 
     );
     //----------------------------------------
-    //              WIRE & REG
+    //              wires & regs
     //----------------------------------------
     wire [31:0] addr_next_w     ;
     wire [31:0] addr_current_w  ;
@@ -40,7 +40,9 @@ module IF_stage(
             addr_current_r  <= addr_current_w;
         end
     end
-
+    // ----------------------------------------------
+    //          Internal blocks
+    // ----------------------------------------------   
     program_counter PC_inst0 (
         .clk_i     (clk_i            ),
         .rstn_i    (rstn_i           ),

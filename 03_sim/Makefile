@@ -2,7 +2,18 @@
 
 ifeq ($(MODE), FETCH_STAGE)
 FILE_LIST = filelist/fetch_stage
+endif
 
+ifeq ($(MODE), DECODE_STAGE)
+FILE_LIST = filelist/decode_stage
+endif
+
+ifeq ($(MODE), EXE_STAGE)
+FILE_LIST = filelist/execute_stage
+endif
+
+ifeq ($(MODE), MEM_STAGE)
+FILE_LIST = filelist/mem_stage
 endif
 
 
@@ -108,6 +119,24 @@ FETCH_STAGE:
 	@echo "<>----------------------MODE----------------------"
 	@$(MAKE) --no-print-directory MODE=FETCH_STAGE lint build sim
 	@echo "<>------------------FETCH_STAGE-------------------"
+
+.PHONY: DECODE_STAGE
+DECODE_STAGE:
+	@echo "<>----------------------MODE----------------------"
+	@$(MAKE) --no-print-directory MODE=DECODE_STAGE lint build sim
+	@echo "<>------------------DECODE_STAGE-------------------"
+
+.PHONY: EXE_STAGE
+EXE_STAGE:
+	@echo "<>----------------------MODE----------------------"
+	@$(MAKE) --no-print-directory MODE=EXE_STAGE lint build sim
+	@echo "<>------------------EXE_STAGE-------------------"
+
+.PHONY: MEM_STAGE
+MEM_STAGE:
+	@echo "<>----------------------MODE----------------------"
+	@$(MAKE) --no-print-directory MODE=MEM_STAGE lint build sim
+	@echo "<>------------------MEM_STAGE-------------------"
 
 
 

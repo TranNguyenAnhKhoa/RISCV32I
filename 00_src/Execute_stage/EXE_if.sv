@@ -1,4 +1,4 @@
-module test(
+module EXE_if(
     input  logic         clk_i             ,
     input  logic         rstn_i            ,
     input  logic [31:0]  instruction_i     ,

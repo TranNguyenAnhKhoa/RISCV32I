@@ -1,42 +1,33 @@
 module EXE_stage(
-    input clk_i, 
-    input rstn_i,
-
-    input        instruction_i,
-
-    input        ctrl_branch_i          ,
-    input        ctrl_mem_read_i        ,
-    input        ctrl_mem_to_reg_i      ,
-    input        ctrl_mem_write_i       ,
-    input        ctrl_ALU_src_i         ,
-    input        ctrl_reg_write_i       ,
-    input [1:0 ] ctrl_ALUOp_i           ,
- 
-    input [31:0] addr_current_i    ,
-    input [31:0] rd1_i
-    input [31:0] rd2_i
-    input [31:0] imm_gen_i 
-
-    input        funct7_30_i,
-    input [2:0]  funct3_i,
-    input [4:0]  rd_i,
-    // hazard
-    input [31:0] hz_ALUresult_MEM_i, 
-    input [31:0] hz_data_wb_i,
-    input [1:0]  hz_sel_ALU1_i, 
-    input [1:0]  hz_sel_ALU2_i,
-
-    output          ctrl_branch_o, 
-    output          ctrl_mem_read_o, 
-    output          ctrl_mem_to_reg_o, 
-    output          ctrl_mem_write_o, 
-    output          ctrl_reg_write_o,
-    output [31:0]   addr_branch_o,
-    output          branch_taken_o,
-
-    output [31:0] ALUresult_o,
-    output [31:0] ALU2_i_o,
-    output [4:0]  rd_o
+    input         clk_i                 , 
+    input         rstn_i                ,
+    input         instruction_i         ,
+    input         ctrl_branch_i         ,
+    input         ctrl_mem_read_i       ,
+    input         ctrl_mem_to_reg_i     ,
+    input         ctrl_mem_write_i      ,
+    input         ctrl_ALU_src_i        ,
+    input         ctrl_reg_write_i      ,
+    input [1:0 ]  ctrl_ALUOp_i          ,
+    input [31:0]  addr_current_i        ,
+    input [31:0]  rd1_i                 ,
+    input [31:0]  rd2_i                 ,
+    input [31:0]  imm_gen_i             ,
+    input         funct7_30_i           ,
+    input [2:0]   funct3_i              ,
+    input [31:0]  hz_ALUresult_MEM_i    , 
+    input [31:0]  hz_data_wb_i          ,
+    input [1:0]   hz_sel_ALU1_i         , 
+    input [1:0]   hz_sel_ALU2_i         ,
+    output        ctrl_branch_o         , 
+    output        ctrl_mem_read_o       , 
+    output        ctrl_mem_to_reg_o     , 
+    output        ctrl_mem_write_o      , 
+    output        ctrl_reg_write_o      ,
+    output [31:0] addr_branch_o         ,
+    output        branch_taken_o        ,
+    output [31:0] ALUresult_o           ,
+    output [31:0] ALU2_i_o              
 
 );
     //----------------------------------------
@@ -100,7 +91,6 @@ always @(posedge clk_i) begin
             ctrl_reg_write_r     <= 1'b0         ;
 
             ALU2_i_r             <= 32'h0000_0000;
-            rd_r                <= 0    ;
             o_mem_to_reg        <= 0    ;
         end else begin
             ctrl_branch_r       <= ctrl_branch_i      ;
@@ -110,7 +100,6 @@ always @(posedge clk_i) begin
             ctrl_reg_write_r    <= ctrl_reg_write_i   ;
             addr_branch_r       <= addr_current_i + imm_gen_i  ;
             ALU2_i_r            <= ALU2_i_w           ;
-            rd_r                <= rd_w          ;
             o_mem_to_reg        <= w_mem_to_reg  ;
         end
         
