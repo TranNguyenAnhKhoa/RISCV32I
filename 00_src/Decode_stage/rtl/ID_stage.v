@@ -1,11 +1,11 @@
 module ID_stage(
     input         clk_i                 ,
     input         rstn_i                ,
-
     input [31:0]  instruction_i         ,
     input [31:0]  addr_current_i        ,
     input [31:0]  write_back_data_i     ,
-    input [4:0 ]  write_rd_i             ,
+    input [4:0 ]  write_rd_i            ,
+    output[4:0 ]  write_rd_o            ,
     input         hz_ctrl_i             ,       // hazard control
     input         reg_write_en_i        ,       // control signal 
     output        ctrl_branch_o         ,       // control signal
@@ -18,7 +18,9 @@ module ID_stage(
     output [31:0] rd1_o                 ,
     output [31:0] rd2_o                 ,
     output [31:0] addr_current_o        ,
-    output [31:0] imm_gen_o 
+    output [31:0] imm_gen_o             ,
+    output        funct7_30_o           ,
+    output [2:0]  funct3_o              ,
 
     );
     //----------------------------------------
@@ -28,7 +30,6 @@ module ID_stage(
     wire [31:0] addr_current_w; 
     wire [31:0] w_addr_branch; 
     wire [31:0] addr_next_w;
-    wire [31:0] w_addr_plus4;
     wire [31:0] rd1_w; 
     wire [31:0] rd2_w;
     wire [31:0] imm_gen_w;
@@ -56,7 +57,7 @@ module ID_stage(
     reg [2:0]   funct3_r;
     reg [4:0]   rs1_r;
     reg [4:0]   rs2_r;
-    reg [4:0]   rd_r;
+    reg [4:0]   write_rd_r;
     reg [31:0]  rd1_r;
     reg [31:0]  rd2_r;
     // ----------------------------------------------
@@ -75,6 +76,9 @@ module ID_stage(
     assign ctrl_ALUsrc_o     = ctrl_ALUsrc_r   ;
     assign ctrl_reg_write_o  = ctrl_reg_write_r ;
     assign ctrl_ALUOp_o      = ctrl_ALUOp_r     ;
+    assign funct7_30_o        = funct7_30_r      ;
+    assign funct3_o           = funct3_r         ;
+    assign write_rd_o         = write_rd_r       ;
     // ----------------------------------------------
     //          Sequential logic
     // ----------------------------------------------
@@ -104,30 +108,30 @@ module ID_stage(
             funct3_r        <= 3'b000       ;
             rs1_r           <= 5'b0000_0    ;
             rs2_r           <= 5'b0000_0    ;
-            rd_r            <= 5'b0000_0    ;
+            write_rd_r            <= 5'b0000_0    ;
             rd1_r           <= 32'b0        ;
             rd2_r           <= 32'b0        ;
 
 
         end else begin
-            ctrl_branch_r        <=  ctrl_branch_w    ;
-            ctrl_mem_read_r      <=  ctrl_mem_read_w  ;
-            ctrl_mem_to_reg_r    <=  ctrl_mem_to_reg_w;
-            ctrl_mem_write_r     <=  ctrl_mem_write_w ;
+            ctrl_branch_r       <=  ctrl_branch_w    ;
+            ctrl_mem_read_r     <=  ctrl_mem_read_w  ;
+            ctrl_mem_to_reg_r   <=  ctrl_mem_to_reg_w;
+            ctrl_mem_write_r    <=  ctrl_mem_write_w ;
             ctrl_ALUsrc_r       <=  ctrl_ALUsrc_w   ;
-            ctrl_reg_write_r     <=  ctrl_reg_write_w ;
-            ctrl_ALUOp_r         <=  ctrl_ALUOp_w     ;
+            ctrl_reg_write_r    <=  ctrl_reg_write_w ;
+            ctrl_ALUOp_r        <=  ctrl_ALUOp_w     ;
 
-            addr_current_r  <= addr_current_i       ;
-            imm_gen_r       <= imm_gen_w        ;
+            addr_current_r      <= addr_current_i       ;
+            imm_gen_r           <= imm_gen_w        ;
 
-            funct7_30_r     <= instruction_w[30]    ;
-            funct3_r        <= instruction_w[14:12] ;
-            rs1_r           <= instruction_w[19:15] ;
-            rs2_r           <= instruction_w[24:20] ;
-            rd_r            <= instruction_w[11:7]  ;
-            rd1_r           <= rd1_w         ;
-            rd2_r           <= rd2_w         ;
+            funct7_30_r         <= instruction_w[30]    ;
+            funct3_r            <= instruction_w[14:12] ;
+            rs1_r               <= instruction_w[19:15] ;
+            rs2_r               <= instruction_w[24:20] ;
+            write_rd_r          <= instruction_w[11:7]  ;
+            rd1_r               <= rd1_w         ;
+            rd2_r               <= rd2_w         ;
         end
         
     end

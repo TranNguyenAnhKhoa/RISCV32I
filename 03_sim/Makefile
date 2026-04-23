@@ -16,6 +16,10 @@ ifeq ($(MODE), MEM_STAGE)
 FILE_LIST = filelist/mem_stage
 endif
 
+ifeq ($(MODE), TOP_MODULE)
+FILE_LIST = filelist/top_module
+endif
+
 
 #------------------VERILATOR------------------
 VERILATOR = verilator
@@ -138,6 +142,11 @@ MEM_STAGE:
 	@$(MAKE) --no-print-directory MODE=MEM_STAGE lint build sim
 	@echo "<>------------------MEM_STAGE-------------------"
 
+.PHONY: TOP_MODULE
+TOP_MODULE:
+	@echo "<>----------------------MODE----------------------"
+	@$(MAKE) --no-print-directory MODE=TOP_MODULE lint build sim
+	@echo "<>------------------TOP_MODULE-------------------"
 
 
 

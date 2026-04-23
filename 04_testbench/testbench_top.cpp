@@ -60,7 +60,8 @@ int main(int argc, char** argv, char** env) {
     top->write_back_data_i  = 0 ;
     top->write_rd_i         = 0 ;
     top->hz_ctrl_i          = 0 ;
-    top->reg_write_en_i     = 0 ;      
+    top->reg_write_en_i     = 0 ; 
+      
 
     while ((sim_time < MAX_SIM_TIME)) {
         // top_reset(top, sim_time);

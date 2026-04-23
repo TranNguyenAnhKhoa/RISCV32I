@@ -1,0 +1,7 @@
+-y ../00_src/Top/rtl
+-y ../00_src/Fetch_stage/rtl
+-y ../00_src/Execute_stage/rtl
+-y ../00_src/Memory_stage/rtl
+
+../00_src/Defines/riscv_defines.v
+../00_src/Top/CORE_if.sv
