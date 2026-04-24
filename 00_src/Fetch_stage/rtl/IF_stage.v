@@ -25,19 +25,24 @@ module IF_stage(
     //          Combinational logic
     // ----------------------------------------------
     assign addr_next_w      = (!branch_i) ? (addr_current_w + 32'h0000_0004) : addr_branch_i;
-    assign instruction_o    = (flush_i) ? 32'h0000_0000 : instruction_r ;
-    assign addr_current_o   = (flush_i) ? 32'h0000_0000 : addr_current_r ;
+    assign instruction_o    = instruction_r ;
+    assign addr_current_o   = addr_current_r ;
 
     // ----------------------------------------------
     //          Sequential logic
     // ----------------------------------------------
-    always @(posedge clk_i ) begin
-        if (!rstn_i) begin
+    always @(posedge clk_i or rstn_i or flush_i) begin
+        if (flush_i) begin
             instruction_r   <= 32'h0000_0000;
             addr_current_r  <= 32'h0000_0000;
         end else begin
-            instruction_r   <= instruction_w ;
-            addr_current_r  <= addr_current_w;
+            if ( !rstn_i ) begin
+                instruction_r   <= 32'h0000_0000;
+                addr_current_r  <= 32'h0000_0000;
+            end else begin
+                instruction_r   <= instruction_w ;
+                addr_current_r  <= addr_current_w;
+            end
         end
     end
     // ----------------------------------------------

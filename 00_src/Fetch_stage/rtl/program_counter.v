@@ -17,7 +17,7 @@ module program_counter
 //------------------------------------    
 //          sequential logic
 //------------------------------------  
-    always @(posedge clk_i) begin
+    always @(posedge clk_i or rstn_i) begin
         if(!rstn_i) begin
             PC_r <= 32'h0;
         end

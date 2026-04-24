@@ -4,8 +4,7 @@ module control(
     output       branch_o, 
     output       mem_read_o, 
     output       mem_to_reg_o, 
-    output       mem_write_o, 
-    output       ALUsrc_o, 
+    output       mem_write_o,
     output       reg_write_o,
     output [1:0] ALUOp_o
 );
@@ -35,7 +34,6 @@ module control(
     reg         mem_read_r  ; 
     reg         mem_to_reg_r; 
     reg         mem_write_r ; 
-    reg         ALUsrc_r   ; 
     reg         reg_write_r ;
     reg [1:0]   ALUOp_r     ;
     
@@ -44,14 +42,12 @@ module control(
     assign mem_read_o   = mem_read_r    ;
     assign mem_to_reg_o = mem_to_reg_r  ;
     assign mem_write_o  = mem_write_r   ;
-    assign ALUsrc_o     = ALUsrc_r      ;
     assign reg_write_o  = reg_write_r   ;
     assign ALUOp_o      = ALUOp_r       ;
 
     always @(*) begin
 
         ALUOp_r      = 2'b00; 
-        ALUsrc_r     = 1'b0;  
         mem_write_r  = 1'b0; 
         mem_read_r   = 1'b0; 
         mem_to_reg_r = 1'b0; 
@@ -61,7 +57,6 @@ module control(
         case (opcode)
             Load: begin
                 ALUOp_r     = 2'b01; 
-                ALUsrc_r   = 1'b1;  
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b1; 
                 mem_to_reg_r= 1'b1; 
@@ -70,7 +65,6 @@ module control(
             end
             R_type: begin
                 ALUOp_r     = 2'b00;
-                ALUsrc_r   = 1'b0;
                 mem_write_r = 1'b0;
                 mem_read_r  = 1'b0;
                 mem_to_reg_r= 1'b0;
@@ -79,7 +73,6 @@ module control(
             end
             Imm_A_L: begin
                 ALUOp_r     = 2'b10; 
-                ALUsrc_r   = 1'b1; 
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b0;
                 mem_to_reg_r= 1'b0; 
@@ -89,7 +82,6 @@ module control(
 
             Store: begin
                 ALUOp_r     = 2'b01; 
-                ALUsrc_r   = 1'b1;  
                 mem_write_r = 1'b1; 
                 mem_read_r  = 1'b0; 
                 mem_to_reg_r= 1'bx; 
@@ -98,7 +90,6 @@ module control(
             end
             B_type: begin
                 ALUOp_r     = 2'b10; 
-                ALUsrc_r   = 1'b0;  
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b0; 
                 mem_to_reg_r= 1'bx; 
@@ -107,7 +98,6 @@ module control(
             end
             Lui: begin
                 ALUOp_r     = 2'b11; 
-                ALUsrc_r   = 1'b1;  
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b0; 
                 mem_to_reg_r= 1'b0; 
@@ -116,7 +106,6 @@ module control(
             end
             jal: begin
                 ALUOp_r     = 2'bxx; 
-                ALUsrc_r   = 1'b0; 
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b0; 
                 mem_to_reg_r= 1'bx; 
@@ -126,7 +115,6 @@ module control(
             
             jalr: begin
                 ALUOp_r     = 2'bxx; 
-                ALUsrc_r   = 1'bx; 
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b0; 
                 mem_to_reg_r= 1'bx; 
@@ -135,7 +123,6 @@ module control(
             end
             auipc: begin
                 ALUOp_r     = 2'bxx; 
-                ALUsrc_r   = 1'bx; 
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b0; 
                 mem_to_reg_r= 1'bx; 
@@ -144,7 +131,6 @@ module control(
             end
             default: begin
                 ALUOp_r     = 2'b00; 
-                ALUsrc_r   = 1'b0; 
                 mem_write_r = 1'b0; 
                 mem_read_r  = 1'b0; 
                 mem_to_reg_r= 1'b0; 

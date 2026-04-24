@@ -6,6 +6,7 @@ module comparator(
 
 );
     wire equal_w, slt_w, ult_w;
+    reg branch_taken_r;
 // take the branch if ....
     parameter   equal                   = 3'b000,
                 not_equal               = 3'b001,
@@ -16,15 +17,16 @@ module comparator(
     
     assign equal_w  = (A_i == B_i);
     assign ult_w    = (A_i < B_i);
+    assign branch_taken_o = branch_taken_r;
     always @(*) begin
         case (funct3_i)
-            equal                : branch_taken_o = (equal_w ) ? 1:0;
-            not_equal            : branch_taken_o = (~equal_w) ? 1:0;
-            less_than            : branch_taken_o = (A_i[31] != B_i[31]) ? A_i[31]:ult_w ; // signed
-            greater_than_or_eq   : branch_taken_o = (A_i[31] != B_i[31]) ? B_i[31]:~ult_w ; // signed
-            less_than_u          : branch_taken_o = (ult_w)  ? 1:0;
-            greater_than_or_eq_u : branch_taken_o = (~ult_w) ? 1:0 ;
-            default              : branch_taken_o = 0;
+            equal                : branch_taken_r = (equal_w ) ? 1:0;
+            not_equal            : branch_taken_r = (~equal_w) ? 1:0;
+            less_than            : branch_taken_r = (A_i[31] != B_i[31]) ? A_i[31]:ult_w ; // signed
+            greater_than_or_eq   : branch_taken_r = (A_i[31] != B_i[31]) ? B_i[31]:~ult_w ; // signed
+            less_than_u          : branch_taken_r = (ult_w)  ? 1:0;
+            greater_than_or_eq_u : branch_taken_r = (~ult_w) ? 1:0 ;
+            default              : branch_taken_r = 0;
         endcase
     end
     

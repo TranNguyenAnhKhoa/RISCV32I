@@ -1,11 +1,11 @@
-module TOP_if(
-    input logic        clk_i             ,
-    input logic        rstn_i            ,
+module CORE_if(
+    input logic        clk_i   ,
+    input logic        rstn_i  
 );
     logic clk_l;
     logic rstn_l;
 
-    always @(posedge clk_i or negedge rstn_i) begin
+    always @(posedge clk_i or rstn_i) begin
         clk_l <= clk_i;
         rstn_l <= rstn_i;
     end
