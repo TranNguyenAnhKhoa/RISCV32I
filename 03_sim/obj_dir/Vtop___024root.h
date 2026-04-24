@@ -20,11 +20,11 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         VL_IN8(rstn_i,0,0);
         CData/*0:0*/ top__DOT__clk_l;
         CData/*0:0*/ top__DOT__rstn_l;
-        CData/*0:0*/ top__DOT__RISCV_inst__DOT__hz_flush_w;
         CData/*0:0*/ top__DOT__RISCV_inst__DOT__hz_ctrl_w;
         CData/*0:0*/ top__DOT__RISCV_inst__DOT__write_IDEX_w;
         CData/*0:0*/ top__DOT__RISCV_inst__DOT__write_PC_w;
         CData/*2:0*/ top__DOT__RISCV_inst__DOT__funct3_MEM_w;
+        CData/*0:0*/ top__DOT__RISCV_inst__DOT__hz_write_IDEX_w;
         CData/*1:0*/ top__DOT__RISCV_inst__DOT__hz_ALU1_w;
         CData/*1:0*/ top__DOT__RISCV_inst__DOT__hz_ALU2_w;
         CData/*0:0*/ top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_branch_r;
@@ -71,17 +71,23 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         CData/*4:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__write_rd_r;
         CData/*0:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__ctrl_reg_write_r;
         CData/*0:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__ctrl_mem_to_reg_r;
+        CData/*2:0*/ __Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__funct3_r;
+        CData/*0:0*/ __Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_write_r;
+        CData/*0:0*/ __Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_reg_write_r;
+        CData/*0:0*/ __Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_to_reg_r;
+        CData/*0:0*/ __Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_read_r;
+        CData/*0:0*/ __Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_branch_r;
+        CData/*4:0*/ __Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r;
         CData/*0:0*/ __VstlFirstIteration;
         CData/*0:0*/ __Vtrigprevexpr___TOP__clk_i__0;
+    };
+    struct {
         CData/*0:0*/ __Vtrigprevexpr___TOP__rstn_i__0;
-        CData/*0:0*/ __Vtrigprevexpr___TOP__top__DOT__RISCV_inst__DOT__hz_flush_w__0;
         CData/*0:0*/ __Vtrigprevexpr___TOP__top__DOT__clk_l__0;
         CData/*0:0*/ __Vtrigprevexpr___TOP__top__DOT__rstn_l__0;
         CData/*0:0*/ __Vtrigprevexpr___TOP__top__DOT__RISCV_inst__DOT__hz_ctrl_w__0;
         CData/*0:0*/ __VactDidInit;
         CData/*0:0*/ __VactContinue;
-    };
-    struct {
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__addr_branch_MEM_w;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__data_WB_w;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__addr_next_w;
@@ -140,32 +146,31 @@ class alignas(VL_CACHE_LINE_BYTES) Vtop___024root final : public VerilatedModule
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out0;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out1;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out2;
+    };
+    struct {
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out3;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out4;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out5;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out6;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out7;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out8;
-    };
-    struct {
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out9;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out10;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out11;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out12;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out13;
         IData/*31:0*/ top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out15;
-        IData/*31:0*/ __Vdly__top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__PC_inst0__DOT__PC_r;
         IData/*31:0*/ __VactIterCount;
         VlUnpacked<CData/*7:0*/, 1024> top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__IMEM_inst0__DOT__imem;
         VlUnpacked<CData/*7:0*/, 64> top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__bank0;
         VlUnpacked<CData/*7:0*/, 64> top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__bank1;
         VlUnpacked<CData/*7:0*/, 64> top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__bank2;
         VlUnpacked<CData/*7:0*/, 64> top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__bank3;
-        VlUnpacked<CData/*0:0*/, 7> __Vm_traceActivity;
+        VlUnpacked<CData/*0:0*/, 8> __Vm_traceActivity;
     };
     VlTriggerVec<1> __VstlTriggered;
-    VlTriggerVec<6> __VactTriggered;
-    VlTriggerVec<6> __VnbaTriggered;
+    VlTriggerVec<5> __VactTriggered;
+    VlTriggerVec<5> __VnbaTriggered;
 
     // INTERNAL VARIABLES
     Vtop__Syms* const vlSymsp;

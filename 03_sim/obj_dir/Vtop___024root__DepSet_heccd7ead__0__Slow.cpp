@@ -19,10 +19,16 @@ VL_ATTR_COLD void Vtop___024root___eval_initial(Vtop___024root* vlSelf) {
     VL_DEBUG_IF(VL_DBG_MSGF("+    Vtop___024root___eval_initial\n"); );
     // Body
     Vtop___024root___eval_initial__TOP(vlSelf);
+    vlSelf->__Vm_traceActivity[7U] = 1U;
+    vlSelf->__Vm_traceActivity[6U] = 1U;
+    vlSelf->__Vm_traceActivity[5U] = 1U;
+    vlSelf->__Vm_traceActivity[4U] = 1U;
+    vlSelf->__Vm_traceActivity[3U] = 1U;
+    vlSelf->__Vm_traceActivity[2U] = 1U;
+    vlSelf->__Vm_traceActivity[1U] = 1U;
+    vlSelf->__Vm_traceActivity[0U] = 1U;
     vlSelf->__Vtrigprevexpr___TOP__clk_i__0 = vlSelf->clk_i;
     vlSelf->__Vtrigprevexpr___TOP__rstn_i__0 = vlSelf->rstn_i;
-    vlSelf->__Vtrigprevexpr___TOP__top__DOT__RISCV_inst__DOT__hz_flush_w__0 
-        = vlSelf->top__DOT__RISCV_inst__DOT__hz_flush_w;
     vlSelf->__Vtrigprevexpr___TOP__top__DOT__clk_l__0 
         = vlSelf->top__DOT__clk_l;
     vlSelf->__Vtrigprevexpr___TOP__top__DOT__rstn_l__0 
@@ -666,38 +672,37 @@ VL_ATTR_COLD void Vtop___024root___stl_sequent__TOP__0(Vtop___024root* vlSelf) {
             ? (vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__addr_current_r 
                + vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__imm_gen_r)
             : ((IData)(4U) + vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__PC_inst0__DOT__PC_r));
-    vlSelf->top__DOT__RISCV_inst__DOT__hz_flush_w = 
-        (1U & (~ ((((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_read_r) 
-                    & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
-                        == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
-                                     >> 0xfU))) | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
-                                                   == 
-                                                   (0x1fU 
-                                                    & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
-                                                       >> 0x14U))))) 
-                   | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_branch_r) 
-                      & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_reg_write_r) 
-                          & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
-                              == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
-                                           >> 0xfU))) 
-                             | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
-                                == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
-                                             >> 0x14U))))) 
-                         | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__ctrl_mem_read_r) 
-                            & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__write_rd_r) 
+    vlSelf->top__DOT__RISCV_inst__DOT__hz_write_IDEX_w 
+        = (1U & (~ ((((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_read_r) 
+                      & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
+                          == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
+                                       >> 0xfU))) | 
+                         ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
+                          == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
+                                       >> 0x14U))))) 
+                     | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_branch_r) 
+                        & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_reg_write_r) 
+                            & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
                                 == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
                                              >> 0xfU))) 
-                               | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__write_rd_r) 
+                               | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
                                   == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
-                                               >> 0x14U)))))))) 
-                  | ((0x67U == (0x707fU & vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r)) 
-                     & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
-                         == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
-                                      >> 0xfU))) | 
-                        ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__ctrl_mem_read_r) 
-                         & ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__write_rd_r) 
-                            == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
-                                         >> 0xfU)))))))));
+                                               >> 0x14U))))) 
+                           | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__ctrl_mem_read_r) 
+                              & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__write_rd_r) 
+                                  == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
+                                               >> 0xfU))) 
+                                 | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__write_rd_r) 
+                                    == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
+                                                 >> 0x14U)))))))) 
+                    | ((0x67U == (0x707fU & vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r)) 
+                       & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
+                           == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
+                                        >> 0xfU))) 
+                          | ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__ctrl_mem_read_r) 
+                             & ((IData)(vlSelf->top__DOT__RISCV_inst__DOT__EXE_stage_inst__DOT__write_rd_r) 
+                                == (0x1fU & (vlSelf->top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__instruction_r 
+                                             >> 0xfU)))))))));
     vlSelf->top__DOT__RISCV_inst__DOT__hz_ctrl_w = 
         ((((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_read_r) 
            & (((IData)(vlSelf->top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r) 
@@ -928,6 +933,7 @@ VL_ATTR_COLD void Vtop___024root___eval_stl(Vtop___024root* vlSelf) {
     // Body
     if ((1ULL & vlSelf->__VstlTriggered.word(0U))) {
         Vtop___024root___stl_sequent__TOP__0(vlSelf);
+        vlSelf->__Vm_traceActivity[7U] = 1U;
         vlSelf->__Vm_traceActivity[6U] = 1U;
         vlSelf->__Vm_traceActivity[5U] = 1U;
         vlSelf->__Vm_traceActivity[4U] = 1U;
@@ -968,19 +974,16 @@ VL_ATTR_COLD void Vtop___024root___dump_triggers__act(Vtop___024root* vlSelf) {
         VL_DBG_MSGF("         'act' region trigger index 0 is active: @(posedge clk_i or [changed] rstn_i)\n");
     }
     if ((2ULL & vlSelf->__VactTriggered.word(0U))) {
-        VL_DBG_MSGF("         'act' region trigger index 1 is active: @([changed] top.RISCV_inst.hz_flush_w or posedge top.clk_l or [changed] top.rstn_l)\n");
+        VL_DBG_MSGF("         'act' region trigger index 1 is active: @(posedge top.clk_l or [changed] top.rstn_l)\n");
     }
     if ((4ULL & vlSelf->__VactTriggered.word(0U))) {
-        VL_DBG_MSGF("         'act' region trigger index 2 is active: @(posedge top.clk_l or [changed] top.rstn_l)\n");
+        VL_DBG_MSGF("         'act' region trigger index 2 is active: @([changed] top.RISCV_inst.hz_ctrl_w or posedge top.clk_l or [changed] top.rstn_l)\n");
     }
     if ((8ULL & vlSelf->__VactTriggered.word(0U))) {
-        VL_DBG_MSGF("         'act' region trigger index 3 is active: @([changed] top.RISCV_inst.hz_ctrl_w or posedge top.clk_l or [changed] top.rstn_l)\n");
+        VL_DBG_MSGF("         'act' region trigger index 3 is active: @(posedge top.clk_l or negedge top.rstn_l)\n");
     }
     if ((0x10ULL & vlSelf->__VactTriggered.word(0U))) {
-        VL_DBG_MSGF("         'act' region trigger index 4 is active: @(posedge top.clk_l or negedge top.rstn_l)\n");
-    }
-    if ((0x20ULL & vlSelf->__VactTriggered.word(0U))) {
-        VL_DBG_MSGF("         'act' region trigger index 5 is active: @(posedge top.clk_l)\n");
+        VL_DBG_MSGF("         'act' region trigger index 4 is active: @(posedge top.clk_l)\n");
     }
 }
 #endif  // VL_DEBUG
@@ -998,19 +1001,16 @@ VL_ATTR_COLD void Vtop___024root___dump_triggers__nba(Vtop___024root* vlSelf) {
         VL_DBG_MSGF("         'nba' region trigger index 0 is active: @(posedge clk_i or [changed] rstn_i)\n");
     }
     if ((2ULL & vlSelf->__VnbaTriggered.word(0U))) {
-        VL_DBG_MSGF("         'nba' region trigger index 1 is active: @([changed] top.RISCV_inst.hz_flush_w or posedge top.clk_l or [changed] top.rstn_l)\n");
+        VL_DBG_MSGF("         'nba' region trigger index 1 is active: @(posedge top.clk_l or [changed] top.rstn_l)\n");
     }
     if ((4ULL & vlSelf->__VnbaTriggered.word(0U))) {
-        VL_DBG_MSGF("         'nba' region trigger index 2 is active: @(posedge top.clk_l or [changed] top.rstn_l)\n");
+        VL_DBG_MSGF("         'nba' region trigger index 2 is active: @([changed] top.RISCV_inst.hz_ctrl_w or posedge top.clk_l or [changed] top.rstn_l)\n");
     }
     if ((8ULL & vlSelf->__VnbaTriggered.word(0U))) {
-        VL_DBG_MSGF("         'nba' region trigger index 3 is active: @([changed] top.RISCV_inst.hz_ctrl_w or posedge top.clk_l or [changed] top.rstn_l)\n");
+        VL_DBG_MSGF("         'nba' region trigger index 3 is active: @(posedge top.clk_l or negedge top.rstn_l)\n");
     }
     if ((0x10ULL & vlSelf->__VnbaTriggered.word(0U))) {
-        VL_DBG_MSGF("         'nba' region trigger index 4 is active: @(posedge top.clk_l or negedge top.rstn_l)\n");
-    }
-    if ((0x20ULL & vlSelf->__VnbaTriggered.word(0U))) {
-        VL_DBG_MSGF("         'nba' region trigger index 5 is active: @(posedge top.clk_l)\n");
+        VL_DBG_MSGF("         'nba' region trigger index 4 is active: @(posedge top.clk_l)\n");
     }
 }
 #endif  // VL_DEBUG
@@ -1029,7 +1029,7 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
     vlSelf->top__DOT__RISCV_inst__DOT__addr_branch_MEM_w = VL_RAND_RESET_I(32);
     vlSelf->top__DOT__RISCV_inst__DOT__funct3_MEM_w = VL_RAND_RESET_I(3);
     vlSelf->top__DOT__RISCV_inst__DOT__data_WB_w = VL_RAND_RESET_I(32);
-    vlSelf->top__DOT__RISCV_inst__DOT__hz_flush_w = VL_RAND_RESET_I(1);
+    vlSelf->top__DOT__RISCV_inst__DOT__hz_write_IDEX_w = VL_RAND_RESET_I(1);
     vlSelf->top__DOT__RISCV_inst__DOT__hz_ctrl_w = VL_RAND_RESET_I(1);
     vlSelf->top__DOT__RISCV_inst__DOT__hz_ALU1_w = VL_RAND_RESET_I(2);
     vlSelf->top__DOT__RISCV_inst__DOT__hz_ALU2_w = VL_RAND_RESET_I(2);
@@ -1160,15 +1160,20 @@ VL_ATTR_COLD void Vtop___024root___ctor_var_reset(Vtop___024root* vlSelf) {
     vlSelf->top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out12 = 0;
     vlSelf->top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out13 = 0;
     vlSelf->top__DOT__RISCV_inst__DOT__MEM_stage_inst__DOT__DMEM_inst0__DOT__data_o__out__strong__out15 = 0;
-    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__IF_stage_inst__DOT__PC_inst0__DOT__PC_r = VL_RAND_RESET_I(32);
+    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__funct3_r = VL_RAND_RESET_I(3);
+    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_write_r = VL_RAND_RESET_I(1);
+    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_reg_write_r = VL_RAND_RESET_I(1);
+    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_to_reg_r = VL_RAND_RESET_I(1);
+    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_mem_read_r = VL_RAND_RESET_I(1);
+    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__ctrl_branch_r = VL_RAND_RESET_I(1);
+    vlSelf->__Vdly__top__DOT__RISCV_inst__DOT__ID_stage_inst__DOT__write_rd_r = VL_RAND_RESET_I(5);
     vlSelf->__Vtrigprevexpr___TOP__clk_i__0 = VL_RAND_RESET_I(1);
     vlSelf->__Vtrigprevexpr___TOP__rstn_i__0 = VL_RAND_RESET_I(1);
-    vlSelf->__Vtrigprevexpr___TOP__top__DOT__RISCV_inst__DOT__hz_flush_w__0 = VL_RAND_RESET_I(1);
     vlSelf->__Vtrigprevexpr___TOP__top__DOT__clk_l__0 = VL_RAND_RESET_I(1);
     vlSelf->__Vtrigprevexpr___TOP__top__DOT__rstn_l__0 = VL_RAND_RESET_I(1);
     vlSelf->__Vtrigprevexpr___TOP__top__DOT__RISCV_inst__DOT__hz_ctrl_w__0 = VL_RAND_RESET_I(1);
     vlSelf->__VactDidInit = 0;
-    for (int __Vi0 = 0; __Vi0 < 7; ++__Vi0) {
+    for (int __Vi0 = 0; __Vi0 < 8; ++__Vi0) {
         vlSelf->__Vm_traceActivity[__Vi0] = 0;
     }
 }
