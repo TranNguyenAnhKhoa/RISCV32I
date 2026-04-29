@@ -3,7 +3,7 @@ module IF_stage(
     input          rstn_i        ,
     input          branch_i     ,
     
-    input          flush_i       ,
+    //input          flush_i       ,
     input          write_PC_en_i ,
     
     input  [31:0]  addr_branch_i ,
@@ -31,18 +31,16 @@ module IF_stage(
     // ----------------------------------------------
     //          Sequential logic
     // ----------------------------------------------
-    always @(posedge clk_i or rstn_i or flush_i) begin
-        if (flush_i) begin
+    always @(posedge clk_i or negedge rstn_i) begin
+        // if (flush_i) begin
+        //     instruction_r   <= 32'h0000_0000;
+        //     addr_current_r  <= 32'h0000_0000;
+        if ( !rstn_i ) begin
             instruction_r   <= 32'h0000_0000;
             addr_current_r  <= 32'h0000_0000;
         end else begin
-            if ( !rstn_i ) begin
-                instruction_r   <= 32'h0000_0000;
-                addr_current_r  <= 32'h0000_0000;
-            end else begin
-                instruction_r   <= instruction_w ;
-                addr_current_r  <= addr_current_w;
-            end
+            instruction_r   <= instruction_w ;
+            addr_current_r  <= addr_current_w;
         end
     end
     // ----------------------------------------------

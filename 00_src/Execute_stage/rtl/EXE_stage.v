@@ -84,7 +84,7 @@ module EXE_stage(
     //          Sequential logic
     // ----------------------------------------------
 always @(posedge clk_i or rstn_i) begin
-        if(rstn_i) begin
+        if(!rstn_i) begin
             ctrl_mem_read_r     <= 1'b0                 ;
             ctrl_mem_to_reg_r   <= 1'b0                 ;
             ctrl_mem_write_r    <= 1'b0                 ;

@@ -52,7 +52,7 @@ module RISCV(
     wire [31:0] data_WB_w = (ctrl_mem_to_reg_MEM_w) ? DMEM_data_MEM_w : ALUresult_MEM_w;
 
         // hazard signal
-    wire        hz_flush_w;
+    wire        hz_write_IDEX_w;
     wire        hz_write_PC_en_w;
     wire        hz_ctrl_w;
     wire [1:0]  hz_ALU1_w;
@@ -65,7 +65,7 @@ module RISCV(
         .clk_i          (clk_i              ),
         .rstn_i         (rstn_i             ),
         .branch_i       (is_branch_EXE_w    ),
-        .flush_i        (hz_flush_w         ),
+        //.flush_i        (hz_write_IDEX_w  ),
         .write_PC_en_i  (hz_write_PC_en_w   ),
         .addr_branch_i  (addr_branch_EXE_w  ),
         .instruction_o  (instr_IF_w          ),
@@ -78,7 +78,8 @@ module RISCV(
         .instruction_i     (instr_IF_w              ), 
         .addr_current_i    (addr_IF_w               ),
         .write_back_data_i (data_WB_w               ), 
-        .write_rd_i        (write_rd_MEM_w           ), 
+        .write_rd_i        (write_rd_MEM_w          ),
+        .write_en_ID_i     (hz_write_IDEX_w         ),
         .hz_ctrl_i         (hz_ctrl_w               ), 
         .reg_write_en_i    (ctrl_reg_write_MEM_w    ),
         .funct7_30_o       (funct7_30_ID_w          ),
@@ -158,7 +159,7 @@ module RISCV(
         .mem_read_EXMEM_i   (ctrl_mem_read_EXE_w    ),
         .branch_ID_i        (ctrl_branch_ID_w      ),
         .is_jalr_i          (   (instr_IF_w & `INST_JALR_MASK) == `INST_JALR ),
-        .write_IDEX_o       (hz_flush_w             ),
+        .write_IDEX_o       (hz_write_IDEX_w             ),
         .write_PC_o         (hz_write_PC_en_w       ),
         .control_mux_o      (hz_ctrl_w              )
     );

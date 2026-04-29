@@ -5,6 +5,7 @@ module ID_stage(
     input [31:0]  addr_current_i        ,
     input [31:0]  write_back_data_i     ,
     input [4:0 ]  write_rd_i            ,
+    input         write_en_ID_i         ,       // control signal from hazard detection unit, to decide whether write back data is valid or not
     input         hz_ctrl_i             ,       // hazard control
     input         reg_write_en_i        ,       // control signal from MEM stage, to decide whether write back data is valid or not
     output        ctrl_branch_o         ,       // control signal
@@ -28,7 +29,6 @@ module ID_stage(
     //              WIRE & REG
     //---------------------------------------- 
     wire [31:0] instruction_w;
-    wire [31:0] addr_current_w; 
     wire [31:0] w_addr_branch; 
     wire [31:0] addr_next_w;
     wire [31:0] rd1_w; 
@@ -43,7 +43,6 @@ module ID_stage(
     wire [1:0]  ctrl_ALUOp_w     ;
     
     reg [31:0]  addr_current_r      ;
-    reg [31:0]  instruction_r       ;
 
     reg         ctrl_branch_r    ;
     reg         ctrl_mem_read_r  ;
@@ -106,29 +105,46 @@ module ID_stage(
             funct3_r        <= 3'b000       ;
             rs1_r           <= 5'b0000_0    ;
             rs2_r           <= 5'b0000_0    ;
-            write_rd_r            <= 5'b0000_0    ;
+            write_rd_r      <= 5'b0000_0    ;
             rd1_r           <= 32'b0        ;
             rd2_r           <= 32'b0        ;
 
-
         end else begin
-            ctrl_branch_r       <=  ctrl_branch_w    ;
-            ctrl_mem_read_r     <=  ctrl_mem_read_w  ;
-            ctrl_mem_to_reg_r   <=  ctrl_mem_to_reg_w;
-            ctrl_mem_write_r    <=  ctrl_mem_write_w ;
-            ctrl_reg_write_r    <=  ctrl_reg_write_w ;
-            ctrl_ALUOp_r        <=  ctrl_ALUOp_w     ;
+            if (write_en_ID_i) begin
+                ctrl_branch_r       <=  ctrl_branch_w    ;
+                ctrl_mem_read_r     <=  ctrl_mem_read_w  ;
+                ctrl_mem_to_reg_r   <=  ctrl_mem_to_reg_w;
+                ctrl_mem_write_r    <=  ctrl_mem_write_w ;
+                ctrl_reg_write_r    <=  ctrl_reg_write_w ;
+                ctrl_ALUOp_r        <=  ctrl_ALUOp_w     ;
 
-            addr_current_r      <= addr_current_i       ;
-            imm_gen_r           <= imm_gen_w        ;
+                addr_current_r      <= addr_current_i       ;
+                imm_gen_r           <= imm_gen_w        ;
 
-            funct7_30_r         <= instruction_w[30]    ;
-            funct3_r            <= instruction_w[14:12] ;
-            rs1_r               <= instruction_w[19:15] ;
-            rs2_r               <= instruction_w[24:20] ;
-            write_rd_r          <= instruction_w[11:7]  ;
-            rd1_r               <= rd1_w         ;
-            rd2_r               <= rd2_w         ;
+                funct7_30_r         <= instruction_w[30]    ;
+                funct3_r            <= instruction_w[14:12] ;
+                rs1_r               <= instruction_w[19:15] ;
+                rs2_r               <= instruction_w[24:20] ;
+                write_rd_r          <= instruction_w[11:7]  ;
+                rd1_r               <= rd1_w         ;
+                rd2_r               <= rd2_w         ;
+            end else begin
+                ctrl_branch_r       <= ctrl_branch_r    ;
+                ctrl_mem_read_r     <= ctrl_mem_read_r  ;
+                ctrl_mem_to_reg_r   <= ctrl_mem_to_reg_r;
+                ctrl_mem_write_r    <= ctrl_mem_write_r ;
+                ctrl_reg_write_r    <= ctrl_reg_write_r ;
+                ctrl_ALUOp_r        <= ctrl_ALUOp_r     ;
+                addr_current_r      <= addr_current_r   ;
+                imm_gen_r           <= imm_gen_r        ;
+                funct7_30_r         <= funct7_30_r      ;
+                funct3_r            <= funct3_r         ;
+                rs1_r               <= rs1_r            ;
+                rs2_r               <= rs2_r            ;
+                write_rd_r          <= write_rd_r       ;
+                rd1_r               <= rd1_r            ;
+                rd2_r               <= rd2_r            ;
+            end
         end
         
     end
