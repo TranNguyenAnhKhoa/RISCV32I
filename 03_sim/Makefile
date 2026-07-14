@@ -1,4 +1,4 @@
-
+MODE ?= TOP_MODULE
 
 ifeq ($(MODE), FETCH_STAGE)
 FILE_LIST = filelist/fetch_stage
@@ -60,12 +60,13 @@ VERILATOR_FLAGS += --assert
 VERILATOR_FLAGS += --trace-fst
 VERILATOR_FLAGS += --build -j
 
-# Add predictor-specific macro
+# Add an optional macro only when the caller supplied one.
+ifneq ($(strip $(MACRO)),)
 VERILATOR_FLAGS += -D$(MACRO)
+endif
 
 #------------ INPUT FILE ---------------
-VERILATOR_INPUT = -f ../00_src/*.sv ../00_src/*.v ../04_testbench/top.sv --top-module top
-VERILATOR_INPUT = -f $(FILE_LIST) ../04_testbench/top.sv --top-module top
+VERILATOR_INPUT = -f $(FILE_LIST) ../04_testbench/RISCV32I_verilator_top.sv --top-module top
 
 
 .PHONY: help

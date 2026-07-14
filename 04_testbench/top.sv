@@ -2,20 +2,16 @@ module top(
     input logic        clk_i   ,
     input logic        rstn_i  
 );
-    logic rstn_l;
     logic [31:0] count_cyc = 0;
-    always @(posedge clk_i) begin
-        rstn_l <= rstn_i;
-    end
 
     RISCV dut(
         .clk_i  (clk_i),
-        .rstn_i (rstn_l)
+        .rstn_i (rstn_i)
     );
 
     always @(posedge clk_i) begin
         count_cyc <= count_cyc + 1;
-        if (count_cyc >= 2 & count_cyc <= 10) begin
+        if ((count_cyc >= 2) && (count_cyc <= 10)) begin
             $display("------------------%d---------------------------", count_cyc);
             $display ( "x0_zero: %h", dut.ID_stage_inst.RF_inst0.x0_zero_w ); 
             $display ( "x1_ra  : %h", dut.ID_stage_inst.RF_inst0.x1_ra_w   );   

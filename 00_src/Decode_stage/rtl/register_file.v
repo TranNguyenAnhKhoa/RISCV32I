@@ -114,7 +114,7 @@ module register_file(
             reg_r30_q <= 32'h0000_0000;
             reg_r31_q <= 32'h0000_0000;
         end
-        else begin
+        else if (reg_write_i) begin
             if (rd_i == 5'd1 )  reg_r1_q  <= rd_value_i;
             if (rd_i == 5'd2 )  reg_r2_q  <= rd_value_i;
             if (rd_i == 5'd3 )  reg_r3_q  <= rd_value_i;
@@ -125,6 +125,7 @@ module register_file(
             if (rd_i == 5'd8 )  reg_r8_q  <= rd_value_i;
             if (rd_i == 5'd9 )  reg_r9_q  <= rd_value_i;
             if (rd_i == 5'd10)  reg_r10_q <= rd_value_i;
+            if (rd_i == 5'd11)  reg_r11_q <= rd_value_i;
             if (rd_i == 5'd12)  reg_r12_q <= rd_value_i;
             if (rd_i == 5'd13)  reg_r13_q <= rd_value_i;
             if (rd_i == 5'd14)  reg_r14_q <= rd_value_i;
@@ -165,6 +166,7 @@ module register_file(
             5'd8 :   rs1_value_r = reg_r8_q ;
             5'd9 :   rs1_value_r = reg_r9_q ;
             5'd10:   rs1_value_r = reg_r10_q;
+            5'd11:   rs1_value_r = reg_r11_q;
             5'd12:   rs1_value_r = reg_r12_q;
             5'd13:   rs1_value_r = reg_r13_q;
             5'd14:   rs1_value_r = reg_r14_q;
@@ -199,6 +201,7 @@ module register_file(
             5'd8 :   rs2_value_r = reg_r8_q ;
             5'd9 :   rs2_value_r = reg_r9_q ;
             5'd10:   rs2_value_r = reg_r10_q;
+            5'd11:   rs2_value_r = reg_r11_q;
             5'd12:   rs2_value_r = reg_r12_q;
             5'd13:   rs2_value_r = reg_r13_q;
             5'd14:   rs2_value_r = reg_r14_q;
@@ -222,6 +225,17 @@ module register_file(
             default: rs2_value_r = 32'h0000_0000;
         endcase
     end
-    assign read_rs1_o = rs1_value_r ; 
-    assign read_rs2_o = rs2_value_r ;
+    // Write-through bypass makes a register written in WB visible to an
+    // instruction entering ID on the same rising edge.
+    assign read_rs1_o = (
+        reg_write_i &&
+        (rd_i != 5'd0) &&
+        (rd_i == rs1_i)
+    ) ? rd_value_i : rs1_value_r;
+
+    assign read_rs2_o = (
+        reg_write_i &&
+        (rd_i != 5'd0) &&
+        (rd_i == rs2_i)
+    ) ? rd_value_i : rs2_value_r;
 endmodule

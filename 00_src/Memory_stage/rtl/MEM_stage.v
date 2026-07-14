@@ -1,4 +1,6 @@
-module MEM_stage(
+module MEM_stage #(
+    parameter DMEM_FILE = ""
+)(
     input           clk_i               , 
     input           rstn_i              ,
     input           ctrl_mem_read_i     , 
@@ -37,7 +39,7 @@ module MEM_stage(
     assign ALUresult_o        = ALUresult_r  ;
     assign DMEM_data_o        = DMEM_data_r ;
 
-    always @(posedge clk_i or rstn_i) begin
+    always @(posedge clk_i or negedge rstn_i) begin
         if( !rstn_i ) begin
             ctrl_reg_write_r    <= 0;
             DMEM_data_r         <= 0; 
@@ -52,7 +54,9 @@ module MEM_stage(
             ALUresult_r         <= ALUresult_i;      
          end
     end
-    DMEM DMEM_inst0(
+    DMEM #(
+        .DMEM_FILE   (DMEM_FILE)
+    ) DMEM_inst0(
         .clk_i       (clk_i           ),
         .address_i   (ALUresult_i     ),
         .data_i      (ALU2i_i         ),

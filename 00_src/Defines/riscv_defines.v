@@ -15,6 +15,7 @@
 
 `define ALU_LESS_THAN           4'b0010
 `define ALU_LESS_THAN_SIGNED    4'b0010
+`define ALU_LESS_THAN_UNSIGNED  4'b0011
 
 //--------------------------------------------------------------------
 // Instructions Masks
@@ -154,10 +155,6 @@
 // lhu
 `define INST_LHU 32'h5003
 `define INST_LHU_MASK 32'h707f
-
-// lwu
-`define INST_LWU 32'h6003
-`define INST_LWU_MASK 32'h707f
 
 // sb
 `define INST_SB 32'h23
@@ -410,7 +407,7 @@
 //--------------------------------------------------------------------
 // SATP definitions
 //--------------------------------------------------------------------
-`define SATP_PPN_R        19:0 // TODO: Should be 21??
+`define SATP_PPN_R        21:0
 `define SATP_ASID_R       30:22
 `define SATP_MODE_R       31
 
