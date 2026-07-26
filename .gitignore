@@ -1,0 +1,46 @@
+# Local Codex/agent state
+/.agents/
+/.codex/
+
+# RISC-V GNU Toolchain source, portable binaries and build products
+/04_testbench/c_compiler/tools/riscv-gnu-toolchain/
+/04_testbench/c_compiler/toolchain/
+/04_testbench/c_compiler/build/
+/04_testbench/c_compiler/toolchain.mk
+/04_testbench/c_compiler/tools/*.zip
+/04_testbench/c_compiler/tools/*.7z
+/04_testbench/c_compiler/tools/*.tar
+/04_testbench/c_compiler/tools/*.tar.gz
+/04_testbench/c_compiler/tools/*.tar.xz
+
+# Verilator generated files
+obj_dir/
+*.vcd
+*.fst
+
+# Vivado/XSim generated directories
+/.Xil/
+*.cache/
+*.runs/
+*.sim/
+*.hw/
+*.ip_user_files/
+xsim.dir/
+
+# Vivado/XSim generated reports and databases
+*.wdb
+*.jou
+*.str
+*.pb
+vivado*.log
+xvlog*.log
+xelab*.log
+xsim*.log
+webtalk*.xml
+webtalk*.jou
+usage_statistics_webtalk.xml
+
+# Operating-system/editor temporary files
+.DS_Store
+Thumbs.db
+*~

@@ -1,0 +1,6 @@
+# vsim -do {run -all; quit -f} -lib {C:\Users\khoah\AppData\Local\Temp\tage_review_codex\work} -c tage_predictor_tb 
+# ** Note: (vsim-3812) Design is being optimized...
+# 
+# ** Error: (vopt-2253) No module name found in command-line argument "C:\Users\khoah\AppData\Local\Temp\tage_review_codex\work.tage_predictor_tb"
+# 
+# Error loading design

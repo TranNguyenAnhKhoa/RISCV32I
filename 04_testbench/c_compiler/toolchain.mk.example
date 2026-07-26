@@ -1,0 +1,18 @@
+# Copy this file to toolchain.mk, then edit the values for your installation.
+# Use forward slashes in Windows paths.
+
+# Repo-local portable layout (c_compiler/toolchain/bin) is detected
+# automatically. Uncomment this only if the extracted layout is different:
+# TOOLCHAIN_BIN := toolchain/bin
+
+# A compiler built from tools/riscv-gnu-toolchain is installed here and is
+# detected automatically when its host executable is present:
+# TOOLCHAIN_BIN := tools/riscv-gnu-toolchain/install/bin
+
+# Official riscv-gnu-toolchain installations commonly use this prefix:
+TOOLCHAIN_BIN := C:/Tools/riscv/bin
+CROSS_COMPILE := riscv64-unknown-elf-
+
+# xPack installations commonly use this prefix instead:
+# TOOLCHAIN_BIN := C:/Tools/xpack-riscv-none-elf-gcc/bin
+# CROSS_COMPILE := riscv-none-elf-

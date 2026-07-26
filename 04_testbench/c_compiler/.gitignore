@@ -1,0 +1,4 @@
+build/
+toolchain/
+toolchain.mk
+tools/riscv-gnu-toolchain/
