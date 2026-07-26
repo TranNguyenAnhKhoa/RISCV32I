@@ -284,7 +284,7 @@ module tage_tagged_table_tb;
             3'd0,
             4'h0,
             1'b0,
-            3'b000,
+            3'b011,
             1'b0
         );
 
@@ -398,31 +398,31 @@ module tage_tagged_table_tb;
         check_entry("aging at zero preserves the entry", 3'd3, 4'hc, 1'b1, 3'b100, 1'b0);
 
         /*
-         * Exact soft-reset mode invalidates the separate validity plane while
-         * leaving LUTRAM contents untouched. Re-allocation makes it visible.
+         * ASIC reset invalidates the separate validity plane for both values
+         * of the compatibility parameter. Tag/counter storage is not reset.
          */
         apply_reset;
         check_entry(
-            "soft reset logically invalidates retained entry",
+            "ASIC reset invalidates tagged entry",
             3'd3,
             4'hc,
             1'b0,
-            3'b100,
+            3'b011,
             1'b0
         );
 
         check_retained_entry(
-            "default reset mode retains predictor entry",
+            "ASIC reset invalidates compatibility mode",
             3'd3,
             4'hc,
-            1'b1,
-            3'b100,
+            1'b0,
+            3'b011,
             1'b0
         );
 
         pulse_allocate(3'd3, 4'hc, 1'b0);
         check_entry(
-            "allocation revalidates entry after soft reset",
+            "allocation revalidates entry after reset",
             3'd3,
             4'hc,
             1'b1,

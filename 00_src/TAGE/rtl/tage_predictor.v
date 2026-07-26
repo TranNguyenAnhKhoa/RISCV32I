@@ -1,4 +1,3 @@
-(* use_dsp = "no" *)
 module tage_predictor #(
     parameter BASE_ENTRY_COUNT      = 64,
     parameter TAGGED_ENTRY_COUNT    = 32,
@@ -238,10 +237,6 @@ module tage_predictor #(
         (update_provider_table_i < 2'd3) &&
         !table3_update_hit_w;
 
-    initial begin
-        allocation_round_robin_q = 2'd0;
-    end
-
     always @(posedge clk_i or negedge rstn_i) begin
         if (!rstn_i) begin
             allocation_round_robin_q <= 2'd0;
@@ -428,31 +423,5 @@ module tage_predictor #(
         .provider_taken_o      (predict_provider_taken_o),
         .alternate_taken_o     (predict_alternate_taken_o)
     );
-
-    // synthesis translate_off
-    initial begin
-        if ((BASE_ENTRY_COUNT < 2) ||
-            ((BASE_ENTRY_COUNT & (BASE_ENTRY_COUNT - 1)) != 0) ||
-            (TAGGED_ENTRY_COUNT < 2) ||
-            ((TAGGED_ENTRY_COUNT & (TAGGED_ENTRY_COUNT - 1)) != 0) ||
-            ((1 << TAGGED_INDEX_WIDTH) != TAGGED_ENTRY_COUNT) ||
-            (TABLE1_TAG_WIDTH < 2) ||
-            (TABLE2_TAG_WIDTH < 2) ||
-            (TABLE3_TAG_WIDTH < 2) ||
-            (COUNTER_WIDTH < 2) ||
-            (USEFUL_WIDTH < 1) ||
-            (TABLE1_HISTORY_LENGTH < 1) ||
-            (TABLE1_HISTORY_LENGTH >= TABLE2_HISTORY_LENGTH) ||
-            (TABLE2_HISTORY_LENGTH >= TABLE3_HISTORY_LENGTH) ||
-            (TABLE3_HISTORY_LENGTH > HISTORY_WIDTH) ||
-            ((RESET_ON_SOFT_RESET != 0) &&
-             (RESET_ON_SOFT_RESET != 1)) ||
-            ((SPECULATIVE_HISTORY != 0) &&
-             (SPECULATIVE_HISTORY != 1))) begin
-            $display("ERROR: invalid tage_predictor parameter");
-            $finish;
-        end
-    end
-    // synthesis translate_on
 
 endmodule

@@ -160,7 +160,7 @@ module tage_global_history_tb;
     task apply_reset;
         begin
             @(negedge clk_r);
-            clear_controls();
+            clear_controls;
             rstn_r = 1'b0;
 
             check_committed_history(8'h00, 1);
@@ -234,8 +234,8 @@ module tage_global_history_tb;
         check_count   = 0;
         error_count   = 0;
 
-        clear_controls();
-        apply_reset();
+        clear_controls;
+        apply_reset;
 
         /*
          * Committed mode ignores speculative accepts and shifts only resolved
@@ -296,7 +296,7 @@ module tage_global_history_tb;
             7
         );
 
-        apply_reset();
+        apply_reset;
 
         /*
          * Speculative mode appends every accepted prediction. Rolling back
@@ -430,7 +430,7 @@ module tage_global_history_tb;
             18
         );
 
-        apply_reset();
+        apply_reset;
 
         if (error_count == 0) begin
             $display(

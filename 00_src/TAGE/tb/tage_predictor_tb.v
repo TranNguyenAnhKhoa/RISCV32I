@@ -296,7 +296,7 @@ module tage_predictor_tb;
         correct_count              = 0;
         tagged_provider_count      = 0;
 
-        apply_reset();
+        apply_reset;
         check_cold_prediction(32'h0000_0100);
 
         /*
@@ -421,7 +421,7 @@ module tage_predictor_tb;
             error_count = error_count + 1;
         end
 
-        apply_reset();
+        apply_reset;
 
         /*
          * Train one base-table index taken, then execute an opposite branch
@@ -494,17 +494,18 @@ module tage_predictor_tb;
             error_count = error_count + 1;
         end
 
-        apply_reset();
+        apply_reset;
         check_cold_prediction(32'h0000_0100);
 
         /*
          * Always-taken branch: after warm-up the predictor must converge.
-         * A bimodal provider is sufficient for this simple pattern.
+         * A bimodal provider is sufficient on this simple pattern.
          */
         correct_count         = 0;
         tagged_provider_count = 0;
 
-        for (iteration = 0; iteration < 96; iteration = iteration + 1) begin
+        iteration = 0;
+        while (iteration < 96) begin
             execute_branch(
                 32'h0000_0100,
                 1'b1,
@@ -521,6 +522,8 @@ module tage_predictor_tb;
                     tagged_provider_count = tagged_provider_count + 1;
                 end
             end
+
+            iteration = iteration + 1;
         end
 
         if (correct_count < 30) begin
@@ -536,7 +539,8 @@ module tage_predictor_tb;
          */
         correct_count = 0;
 
-        for (iteration = 0; iteration < 48; iteration = iteration + 1) begin
+        iteration = 0;
+        while (iteration < 48) begin
             execute_branch(
                 32'h0000_0180,
                 1'b0,
@@ -547,6 +551,8 @@ module tage_predictor_tb;
             if ((iteration >= 24) && (branch_prediction == 1'b0)) begin
                 correct_count = correct_count + 1;
             end
+
+            iteration = iteration + 1;
         end
 
         if (correct_count < 23) begin
@@ -561,11 +567,12 @@ module tage_predictor_tb;
          * Alternating outcome defeats a PC-only bimodal predictor but is
          * learnable from the geometric global histories.
          */
-        apply_reset();
+        apply_reset;
         correct_count         = 0;
         tagged_provider_count = 0;
 
-        for (iteration = 0; iteration < 256; iteration = iteration + 1) begin
+        iteration = 0;
+        while (iteration < 256) begin
             branch_outcome = iteration[0];
 
             execute_branch(
@@ -583,6 +590,8 @@ module tage_predictor_tb;
             if ((iteration >= 192) && (branch_provider != 2'd0)) begin
                 tagged_provider_count = tagged_provider_count + 1;
             end
+
+            iteration = iteration + 1;
         end
 
         if (correct_count < 56) begin
@@ -601,10 +610,11 @@ module tage_predictor_tb;
         /*
          * Opposite branches sharing one base index exercise partial tags.
          */
-        apply_reset();
+        apply_reset;
         correct_count = 0;
 
-        for (iteration = 0; iteration < 192; iteration = iteration + 1) begin
+        iteration = 0;
+        while (iteration < 192) begin
             execute_branch(
                 32'h0000_0300,
                 1'b1,
@@ -626,6 +636,8 @@ module tage_predictor_tb;
             if ((iteration >= 160) && (branch_prediction == 1'b0)) begin
                 correct_count = correct_count + 1;
             end
+
+            iteration = iteration + 1;
         end
 
         if (correct_count < 60) begin
@@ -637,10 +649,10 @@ module tage_predictor_tb;
         end
 
         /*
-         * The optional exact soft-reset mode must make retained table entries
-         * logically cold without resetting the LUTRAM arrays themselves.
+         * ASIC reset invalidates the validity metadata, so all retained table
+         * data is logically cold without resetting tag/counter storage.
          */
-        apply_reset();
+        apply_reset;
         check_cold_prediction(32'h0000_0300);
 
         if (error_count == 0) begin

@@ -1,4 +1,3 @@
-(* use_dsp = "no" *)
 module tage_tagged_table #(
     parameter ENTRY_COUNT         = 32,
     parameter INDEX_WIDTH         = 5,
@@ -33,8 +32,7 @@ module tage_tagged_table #(
     localparam COUNTER_MSB = USEFUL_WIDTH + COUNTER_WIDTH - 1;
     localparam TAG_LSB = USEFUL_WIDTH + COUNTER_WIDTH;
     localparam TAG_MSB = USEFUL_WIDTH + COUNTER_WIDTH + TAG_WIDTH - 1;
-    localparam VALID_BIT = USEFUL_WIDTH + COUNTER_WIDTH + TAG_WIDTH;
-    localparam ENTRY_WIDTH = VALID_BIT + 1;
+    localparam ENTRY_WIDTH = USEFUL_WIDTH + COUNTER_WIDTH + TAG_WIDTH;
 
     localparam [COUNTER_WIDTH-1:0] WEAKLY_NOT_TAKEN = {
         1'b0,
@@ -46,13 +44,15 @@ module tage_tagged_table #(
         {COUNTER_WIDTH-1{1'b0}}
     };
 
-    (* ram_style = "distributed" *)
+    /*
+     * Tag, prediction counter and usefulness storage are intentionally not
+     * reset. entry_valid_q is the only resettable metadata plane.
+     */
     reg [ENTRY_WIDTH-1:0] entry_table_q [0:ENTRY_COUNT-1];
+    reg [ENTRY_COUNT-1:0] entry_valid_q;
 
     wire [ENTRY_WIDTH-1:0] predict_entry_w;
     wire [ENTRY_WIDTH-1:0] update_entry_w;
-    wire                   predict_reset_valid_w;
-    wire                   update_reset_valid_w;
     wire                   predict_entry_active_w;
     wire                   update_entry_active_w;
     wire                   update_tag_match_w;
@@ -66,71 +66,69 @@ module tage_tagged_table #(
 
     reg [ENTRY_WIDTH-1:0] table_write_data_r;
 
-    integer entry_index;
-
     function [COUNTER_WIDTH-1:0] update_counter;
-        input [COUNTER_WIDTH-1:0] current_value;
-        input                     taken_value;
+        input [COUNTER_WIDTH-1:0] current_value_i;
+        input                     taken_value_i;
         begin
-            if (taken_value) begin
-                if (&current_value) begin
-                    update_counter = current_value;
+            if (taken_value_i) begin
+                if (&current_value_i) begin
+                    update_counter = current_value_i;
                 end else begin
-                    update_counter = current_value + 1'b1;
+                    update_counter = current_value_i + 1'b1;
                 end
             end else begin
-                if (!(|current_value)) begin
-                    update_counter = current_value;
+                if (!(|current_value_i)) begin
+                    update_counter = current_value_i;
                 end else begin
-                    update_counter = current_value - 1'b1;
+                    update_counter = current_value_i - 1'b1;
                 end
             end
         end
     endfunction
 
     function [USEFUL_WIDTH-1:0] update_useful;
-        input [USEFUL_WIDTH-1:0] current_value;
-        input                    increment_value;
+        input [USEFUL_WIDTH-1:0] current_value_i;
+        input                    increment_value_i;
         begin
-            if (increment_value) begin
-                if (&current_value) begin
-                    update_useful = current_value;
+            if (increment_value_i) begin
+                if (&current_value_i) begin
+                    update_useful = current_value_i;
                 end else begin
-                    update_useful = current_value + 1'b1;
+                    update_useful = current_value_i + 1'b1;
                 end
             end else begin
-                if (!(|current_value)) begin
-                    update_useful = current_value;
+                if (!(|current_value_i)) begin
+                    update_useful = current_value_i;
                 end else begin
-                    update_useful = current_value - 1'b1;
+                    update_useful = current_value_i - 1'b1;
                 end
             end
         end
     endfunction
 
-    assign predict_entry_w = entry_table_q[predict_index_i];
-    assign update_entry_w  = entry_table_q[update_index_i];
-
-    assign predict_entry_active_w =
-        predict_reset_valid_w && predict_entry_w[VALID_BIT];
-
-    assign update_entry_active_w =
-        update_reset_valid_w && update_entry_w[VALID_BIT];
+    assign predict_entry_w        = entry_table_q[predict_index_i];
+    assign update_entry_w         = entry_table_q[update_index_i];
+    assign predict_entry_active_w = entry_valid_q[predict_index_i];
+    assign update_entry_active_w  = entry_valid_q[update_index_i];
 
     assign predict_hit_o = predict_entry_active_w &&
                            (predict_entry_w[TAG_MSB:TAG_LSB] ==
                             predict_tag_i);
 
     assign predict_counter_o =
-        predict_entry_w[COUNTER_MSB:COUNTER_LSB];
+        predict_entry_active_w
+        ? predict_entry_w[COUNTER_MSB:COUNTER_LSB]
+        : WEAKLY_NOT_TAKEN;
 
-    assign predict_useful_o = predict_entry_active_w
-                            ? predict_entry_w[USEFUL_MSB:USEFUL_LSB]
-                            : {USEFUL_WIDTH{1'b0}};
+    assign predict_useful_o =
+        predict_entry_active_w
+        ? predict_entry_w[USEFUL_MSB:USEFUL_LSB]
+        : {USEFUL_WIDTH{1'b0}};
 
-    assign update_useful_o = update_entry_active_w
-                           ? update_entry_w[USEFUL_MSB:USEFUL_LSB]
-                           : {USEFUL_WIDTH{1'b0}};
+    assign update_useful_o =
+        update_entry_active_w
+        ? update_entry_w[USEFUL_MSB:USEFUL_LSB]
+        : {USEFUL_WIDTH{1'b0}};
 
     assign update_tag_match_w =
         update_entry_active_w &&
@@ -139,10 +137,14 @@ module tage_tagged_table #(
     assign update_hit_o = update_tag_match_w;
 
     assign update_counter_w =
-        update_entry_w[COUNTER_MSB:COUNTER_LSB];
+        update_entry_active_w
+        ? update_entry_w[COUNTER_MSB:COUNTER_LSB]
+        : WEAKLY_NOT_TAKEN;
 
     assign update_useful_w =
-        update_entry_w[USEFUL_MSB:USEFUL_LSB];
+        update_entry_active_w
+        ? update_entry_w[USEFUL_MSB:USEFUL_LSB]
+        : {USEFUL_WIDTH{1'b0}};
 
     assign trained_counter_w =
         update_counter(update_counter_w, train_taken_i);
@@ -166,7 +168,6 @@ module tage_tagged_table #(
 
         if (allocate_valid_i) begin
             table_write_data_r = {ENTRY_WIDTH{1'b0}};
-            table_write_data_r[VALID_BIT] = 1'b1;
             table_write_data_r[TAG_MSB:TAG_LSB] = update_tag_i;
             table_write_data_r[COUNTER_MSB:COUNTER_LSB] =
                 allocate_taken_i
@@ -188,38 +189,16 @@ module tage_tagged_table #(
         end
     end
 
-    generate
-        if (RESET_ON_SOFT_RESET != 0) begin : generate_soft_reset
-            reg [ENTRY_COUNT-1:0] entry_reset_valid_q;
-
-            initial begin
-                entry_reset_valid_q = {ENTRY_COUNT{1'b0}};
-            end
-
-            always @(posedge clk_i or negedge rstn_i) begin
-                if (!rstn_i) begin
-                    entry_reset_valid_q <= {ENTRY_COUNT{1'b0}};
-                end else if (allocate_valid_i) begin
-                    entry_reset_valid_q[update_index_i] <= 1'b1;
-                end
-            end
-
-            assign predict_reset_valid_w =
-                entry_reset_valid_q[predict_index_i];
-
-            assign update_reset_valid_w =
-                entry_reset_valid_q[update_index_i];
-        end else begin : generate_retain_history
-            assign predict_reset_valid_w = 1'b1;
-            assign update_reset_valid_w  = 1'b1;
-        end
-    endgenerate
-
-    initial begin
-        for (entry_index = 0;
-             entry_index < ENTRY_COUNT;
-             entry_index = entry_index + 1) begin
-            entry_table_q[entry_index] = {ENTRY_WIDTH{1'b0}};
+    /*
+     * RESET_ON_SOFT_RESET is kept to preserve source compatibility. This ASIC
+     * implementation both parameter values invalidate all metadata whenever
+     * rstn_i is low; tag/counter/usefulness storage is never reset.
+     */
+    always @(posedge clk_i or negedge rstn_i) begin
+        if (!rstn_i) begin
+            entry_valid_q <= {ENTRY_COUNT{1'b0}};
+        end else if (allocate_valid_i) begin
+            entry_valid_q[update_index_i] <= 1'b1;
         end
     end
 
@@ -228,21 +207,5 @@ module tage_tagged_table #(
             entry_table_q[update_index_i] <= table_write_data_r;
         end
     end
-
-    // synthesis translate_off
-    initial begin
-        if ((ENTRY_COUNT < 2) ||
-            ((ENTRY_COUNT & (ENTRY_COUNT - 1)) != 0) ||
-            ((1 << INDEX_WIDTH) != ENTRY_COUNT) ||
-            (TAG_WIDTH < 2) ||
-            (COUNTER_WIDTH < 2) ||
-            (USEFUL_WIDTH < 1) ||
-            ((RESET_ON_SOFT_RESET != 0) &&
-             (RESET_ON_SOFT_RESET != 1))) begin
-            $display("ERROR: invalid tage_tagged_table parameter");
-            $finish;
-        end
-    end
-    // synthesis translate_on
 
 endmodule

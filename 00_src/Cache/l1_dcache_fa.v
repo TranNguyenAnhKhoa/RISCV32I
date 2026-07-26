@@ -6,52 +6,47 @@ module l1_dcache_fa #(
     parameter LINE_COUNT = 4,
     parameter WORDS_PER_LINE = 4
 ) (
-    input  wire                     clk_i,
-    input  wire                     rstn_i,
-
-    input  wire                     cpu_request_valid_i,
-    input  wire                     cpu_write_i,
-    input  wire [ADDRESS_WIDTH-1:0] cpu_address_i,
-    input  wire [DATA_WIDTH-1:0]    cpu_write_data_i,
-    input  wire [3:0]               cpu_write_strobe_i,
-    output reg                      cpu_request_ready_o,
-    output reg                      cpu_response_valid_o,
-    output reg  [DATA_WIDTH-1:0]    cpu_read_data_o,
-
-    input  wire                     flush_i,
-    output reg                      flush_busy_o,
-    output reg                      flush_done_o,
-
-    output reg                      memory_request_valid_o,
-    output reg                      memory_write_o,
-    output reg  [ADDRESS_WIDTH-1:0] memory_address_o,
-    output reg  [DATA_WIDTH-1:0]    memory_write_data_o,
-    output reg  [3:0]               memory_write_strobe_o,
-    input  wire                     memory_request_ready_i,
-    input  wire                     memory_response_valid_i,
-    input  wire [DATA_WIDTH-1:0]    memory_read_data_i,
-
-    output reg  [31:0]              hit_count_o,
-    output reg  [31:0]              miss_count_o,
-    output reg  [31:0]              writeback_count_o
+    input wire clk_i,
+    input wire rstn_i,
+    input wire cpu_request_valid_i,
+    input wire cpu_write_i,
+    input wire [ADDRESS_WIDTH-1:0] cpu_address_i,
+    input wire [DATA_WIDTH-1:0] cpu_write_data_i,
+    input wire [3:0] cpu_write_strobe_i,
+    output reg cpu_request_ready_o,
+    output reg cpu_response_valid_o,
+    output reg [DATA_WIDTH-1:0] cpu_read_data_o,
+    input wire flush_i,
+    output reg flush_busy_o,
+    output reg flush_done_o,
+    output reg memory_request_valid_o,
+    output reg memory_write_o,
+    output reg [ADDRESS_WIDTH-1:0] memory_address_o,
+    output reg [DATA_WIDTH-1:0] memory_write_data_o,
+    output reg [3:0] memory_write_strobe_o,
+    input wire memory_request_ready_i,
+    input wire memory_response_valid_i,
+    input wire [DATA_WIDTH-1:0] memory_read_data_i,
+    output reg [31:0] hit_count_o,
+    output reg [31:0] miss_count_o,
+    output reg [31:0] writeback_count_o
 );
-    function integer clog2;
-        input integer value;
-        integer temporary_value;
-        begin
-            temporary_value = value - 1;
-            for (clog2 = 0; temporary_value > 0; clog2 = clog2 + 1) begin
-                temporary_value = temporary_value >> 1;
-            end
-        end
-    endfunction
 
-    localparam BYTE_OFFSET_WIDTH = 2;
-    localparam LINE_WORD_OFFSET_WIDTH = clog2(WORDS_PER_LINE);
-    localparam WORD_INDEX_WIDTH = (WORDS_PER_LINE <= 1) ? 1 : clog2(WORDS_PER_LINE);
-    localparam LINE_INDEX_WIDTH = (LINE_COUNT <= 1) ? 1 : clog2(LINE_COUNT);
-    localparam TAG_WIDTH = ADDRESS_WIDTH - BYTE_OFFSET_WIDTH - LINE_WORD_OFFSET_WIDTH;
-    localparam DATA_ENTRY_COUNT = LINE_COUNT * WORDS_PER_LINE;
+    localparam integer BYTE_OFFSET_WIDTH = 2;
+    localparam integer LINE_WORD_OFFSET_WIDTH =
+        (WORDS_PER_LINE == 1)  ? 0 :
+        (WORDS_PER_LINE == 2)  ? 1 :
+        (WORDS_PER_LINE == 4)  ? 2 :
+        (WORDS_PER_LINE == 8)  ? 3 : 4;
+    localparam integer WORD_INDEX_WIDTH =
+        (WORDS_PER_LINE == 1)  ? 1 :
+        (WORDS_PER_LINE == 2)  ? 1 :
+        (WORDS_PER_LINE == 4)  ? 2 :
+        (WORDS_PER_LINE == 8)  ? 3 : 4;
+    localparam integer LINE_ADDRESS_OFFSET_WIDTH =
+        BYTE_OFFSET_WIDTH + LINE_WORD_OFFSET_WIDTH;
+    localparam integer TAG_WIDTH =
+        ADDRESS_WIDTH - LINE_ADDRESS_OFFSET_WIDTH;
 
     localparam [3:0] DCACHE_IDLE                    = 4'd0;
     localparam [3:0] DCACHE_LOOKUP                  = 4'd1;
@@ -63,315 +58,813 @@ module l1_dcache_fa #(
     localparam [3:0] DCACHE_FLUSH_WRITEBACK_REQUEST = 4'd7;
     localparam [3:0] DCACHE_FLUSH_DONE              = 4'd8;
 
-    reg [3:0] state_r;
+    reg [3:0] state_q;
 
-    reg [TAG_WIDTH-1:0] tag_array [0:LINE_COUNT-1];
-    reg                 valid_array [0:LINE_COUNT-1];
-    reg                 dirty_array [0:LINE_COUNT-1];
-    reg [DATA_WIDTH-1:0] data_array [0:DATA_ENTRY_COUNT-1];
+    reg valid_way0_q;
+    reg valid_way1_q;
+    reg valid_way2_q;
+    reg valid_way3_q;
+    reg dirty_way0_q;
+    reg dirty_way1_q;
+    reg dirty_way2_q;
+    reg dirty_way3_q;
 
-    reg [ADDRESS_WIDTH-1:0] request_address_r;
-    reg                     request_write_r;
-    reg [DATA_WIDTH-1:0]    request_write_data_r;
-    reg [3:0]               request_write_strobe_r;
-    reg [DATA_WIDTH-1:0]    response_data_r;
-    reg                     replay_after_miss_r;
+    reg [TAG_WIDTH-1:0] tag_way0_q;
+    reg [TAG_WIDTH-1:0] tag_way1_q;
+    reg [TAG_WIDTH-1:0] tag_way2_q;
+    reg [TAG_WIDTH-1:0] tag_way3_q;
 
-    reg [LINE_INDEX_WIDTH-1:0] victim_index_r;
-    reg [LINE_INDEX_WIDTH-1:0] replacement_pointer_r;
-    reg [LINE_INDEX_WIDTH-1:0] flush_line_r;
-    reg [WORD_INDEX_WIDTH-1:0] transfer_word_r;
+    reg [DATA_WIDTH-1:0] data_way0_q [0:WORDS_PER_LINE-1];
+    reg [DATA_WIDTH-1:0] data_way1_q [0:WORDS_PER_LINE-1];
+    reg [DATA_WIDTH-1:0] data_way2_q [0:WORDS_PER_LINE-1];
+    reg [DATA_WIDTH-1:0] data_way3_q [0:WORDS_PER_LINE-1];
 
-    reg lookup_hit;
-    reg [LINE_INDEX_WIDTH-1:0] lookup_hit_index;
-    reg [LINE_INDEX_WIDTH-1:0] selected_victim_index;
-    reg invalid_line_found;
-    wire [TAG_WIDTH-1:0] request_tag;
-    reg [WORD_INDEX_WIDTH-1:0] request_word_index;
+    reg [ADDRESS_WIDTH-1:0] request_address_q;
+    reg request_write_q;
+    reg [DATA_WIDTH-1:0] request_write_data_q;
+    reg [3:0] request_write_strobe_q;
+    reg [DATA_WIDTH-1:0] response_data_q;
+    reg replay_after_miss_q;
+    reg flush_pending_q;
 
-    integer lookup_line_index;
-    integer victim_search_index;
-    integer sequential_line_index;
-    integer byte_index;
+    reg [1:0] victim_way_q;
+    reg [1:0] replacement_way_q;
+    reg [1:0] flush_way_q;
+    reg [WORD_INDEX_WIDTH-1:0] transfer_word_q;
 
-    assign request_tag = request_address_r >>
-                         (BYTE_OFFSET_WIDTH + LINE_WORD_OFFSET_WIDTH);
+    wire [TAG_WIDTH-1:0] request_tag_w;
+    wire [WORD_INDEX_WIDTH-1:0] request_word_index_w;
+    wire [ADDRESS_WIDTH-1:0] transfer_byte_offset_w;
 
-    always @(*) begin
-        request_word_index = {WORD_INDEX_WIDTH{1'b0}};
-        if (WORDS_PER_LINE > 1) begin
-            request_word_index = request_address_r >> BYTE_OFFSET_WIDTH;
-        end
-    end
+    wire way0_hit_w;
+    wire way1_hit_w;
+    wire way2_hit_w;
+    wire way3_hit_w;
+    wire lookup_hit_w;
 
-    always @(*) begin
-        lookup_hit       = 1'b0;
-        lookup_hit_index = {LINE_INDEX_WIDTH{1'b0}};
+    reg [1:0] lookup_hit_way_r;
+    reg [1:0] selected_victim_way_r;
+    reg selected_victim_valid_r;
+    reg selected_victim_dirty_r;
+    reg [DATA_WIDTH-1:0] lookup_data_r;
+    reg [TAG_WIDTH-1:0] victim_tag_r;
+    reg [DATA_WIDTH-1:0] victim_data_r;
+    reg flush_valid_r;
+    reg flush_dirty_r;
+    reg [TAG_WIDTH-1:0] flush_tag_r;
+    reg [DATA_WIDTH-1:0] flush_data_r;
 
-        for (lookup_line_index = 0;
-             lookup_line_index < LINE_COUNT;
-             lookup_line_index = lookup_line_index + 1) begin
-            if (valid_array[lookup_line_index] &&
-                (tag_array[lookup_line_index] == request_tag)) begin
-                lookup_hit       = 1'b1;
-                lookup_hit_index = lookup_line_index;
+    function [DATA_WIDTH-1:0] merge_write_data;
+        input [DATA_WIDTH-1:0] current_data_i;
+        input [DATA_WIDTH-1:0] write_data_i;
+        input [3:0] write_strobe_i;
+        begin
+            merge_write_data = current_data_i;
+            if (write_strobe_i[0]) begin
+                merge_write_data[7:0] = write_data_i[7:0];
+            end
+            if (write_strobe_i[1]) begin
+                merge_write_data[15:8] = write_data_i[15:8];
+            end
+            if (write_strobe_i[2]) begin
+                merge_write_data[23:16] = write_data_i[23:16];
+            end
+            if (write_strobe_i[3]) begin
+                merge_write_data[31:24] = write_data_i[31:24];
             end
         end
-    end
+    endfunction
+
+    assign request_tag_w =
+        request_address_q >> LINE_ADDRESS_OFFSET_WIDTH;
+
+    assign request_word_index_w =
+        (WORDS_PER_LINE == 1) ?
+        {WORD_INDEX_WIDTH{1'b0}} :
+        (request_address_q >> BYTE_OFFSET_WIDTH);
+
+    assign transfer_byte_offset_w =
+        {{(ADDRESS_WIDTH-WORD_INDEX_WIDTH){1'b0}}, transfer_word_q}
+        << BYTE_OFFSET_WIDTH;
+
+    assign way0_hit_w =
+        valid_way0_q &&
+        (tag_way0_q == request_tag_w);
+
+    assign way1_hit_w =
+        (LINE_COUNT >= 2) &&
+        valid_way1_q &&
+        (tag_way1_q == request_tag_w);
+
+    assign way2_hit_w =
+        (LINE_COUNT >= 3) &&
+        valid_way2_q &&
+        (tag_way2_q == request_tag_w);
+
+    assign way3_hit_w =
+        (LINE_COUNT >= 4) &&
+        valid_way3_q &&
+        (tag_way3_q == request_tag_w);
+
+    assign lookup_hit_w =
+        way0_hit_w ||
+        way1_hit_w ||
+        way2_hit_w ||
+        way3_hit_w;
 
     always @(*) begin
-        selected_victim_index = replacement_pointer_r;
-        invalid_line_found    = 1'b0;
+        lookup_hit_way_r = 2'd0;
 
-        for (victim_search_index = 0;
-             victim_search_index < LINE_COUNT;
-             victim_search_index = victim_search_index + 1) begin
-            if (!invalid_line_found && !valid_array[victim_search_index]) begin
-                selected_victim_index = victim_search_index;
-                invalid_line_found    = 1'b1;
-            end
+        if (way0_hit_w) begin
+            lookup_hit_way_r = 2'd0;
+        end else if (way1_hit_w) begin
+            lookup_hit_way_r = 2'd1;
+        end else if (way2_hit_w) begin
+            lookup_hit_way_r = 2'd2;
+        end else if (way3_hit_w) begin
+            lookup_hit_way_r = 2'd3;
         end
     end
 
     always @(*) begin
-        cpu_request_ready_o    = (state_r == DCACHE_IDLE) && !flush_i;
-        cpu_response_valid_o   = (state_r == DCACHE_RESPOND);
-        cpu_read_data_o        = response_data_r;
-        flush_busy_o           = (state_r == DCACHE_FLUSH_SCAN) ||
-                                 (state_r == DCACHE_FLUSH_WRITEBACK_REQUEST);
-        flush_done_o           = (state_r == DCACHE_FLUSH_DONE);
+        selected_victim_way_r = replacement_way_q;
 
+        if (!valid_way0_q) begin
+            selected_victim_way_r = 2'd0;
+        end else if ((LINE_COUNT >= 2) && !valid_way1_q) begin
+            selected_victim_way_r = 2'd1;
+        end else if ((LINE_COUNT >= 3) && !valid_way2_q) begin
+            selected_victim_way_r = 2'd2;
+        end else if ((LINE_COUNT >= 4) && !valid_way3_q) begin
+            selected_victim_way_r = 2'd3;
+        end
+    end
+
+    always @(*) begin
+        selected_victim_valid_r = 1'b0;
+        selected_victim_dirty_r = 1'b0;
+
+        case (selected_victim_way_r)
+            2'd0: begin
+                selected_victim_valid_r = valid_way0_q;
+                selected_victim_dirty_r = dirty_way0_q;
+            end
+
+            2'd1: begin
+                selected_victim_valid_r = valid_way1_q;
+                selected_victim_dirty_r = dirty_way1_q;
+            end
+
+            2'd2: begin
+                selected_victim_valid_r = valid_way2_q;
+                selected_victim_dirty_r = dirty_way2_q;
+            end
+
+            2'd3: begin
+                selected_victim_valid_r = valid_way3_q;
+                selected_victim_dirty_r = dirty_way3_q;
+            end
+
+            default: begin
+                selected_victim_valid_r = 1'b0;
+                selected_victim_dirty_r = 1'b0;
+            end
+        endcase
+    end
+
+    always @(*) begin
+        lookup_data_r = {DATA_WIDTH{1'b0}};
+
+        case (lookup_hit_way_r)
+            2'd0: begin
+                lookup_data_r = data_way0_q[request_word_index_w];
+            end
+
+            2'd1: begin
+                lookup_data_r = data_way1_q[request_word_index_w];
+            end
+
+            2'd2: begin
+                lookup_data_r = data_way2_q[request_word_index_w];
+            end
+
+            2'd3: begin
+                lookup_data_r = data_way3_q[request_word_index_w];
+            end
+
+            default: begin
+                lookup_data_r = {DATA_WIDTH{1'b0}};
+            end
+        endcase
+    end
+
+    always @(*) begin
+        victim_tag_r = {TAG_WIDTH{1'b0}};
+        victim_data_r = {DATA_WIDTH{1'b0}};
+
+        case (victim_way_q)
+            2'd0: begin
+                victim_tag_r = tag_way0_q;
+                victim_data_r = data_way0_q[transfer_word_q];
+            end
+
+            2'd1: begin
+                victim_tag_r = tag_way1_q;
+                victim_data_r = data_way1_q[transfer_word_q];
+            end
+
+            2'd2: begin
+                victim_tag_r = tag_way2_q;
+                victim_data_r = data_way2_q[transfer_word_q];
+            end
+
+            2'd3: begin
+                victim_tag_r = tag_way3_q;
+                victim_data_r = data_way3_q[transfer_word_q];
+            end
+
+            default: begin
+                victim_tag_r = {TAG_WIDTH{1'b0}};
+                victim_data_r = {DATA_WIDTH{1'b0}};
+            end
+        endcase
+    end
+
+    always @(*) begin
+        flush_valid_r = 1'b0;
+        flush_dirty_r = 1'b0;
+        flush_tag_r = {TAG_WIDTH{1'b0}};
+        flush_data_r = {DATA_WIDTH{1'b0}};
+
+        case (flush_way_q)
+            2'd0: begin
+                flush_valid_r = valid_way0_q;
+                flush_dirty_r = dirty_way0_q;
+                flush_tag_r = tag_way0_q;
+                flush_data_r = data_way0_q[transfer_word_q];
+            end
+
+            2'd1: begin
+                flush_valid_r = valid_way1_q;
+                flush_dirty_r = dirty_way1_q;
+                flush_tag_r = tag_way1_q;
+                flush_data_r = data_way1_q[transfer_word_q];
+            end
+
+            2'd2: begin
+                flush_valid_r = valid_way2_q;
+                flush_dirty_r = dirty_way2_q;
+                flush_tag_r = tag_way2_q;
+                flush_data_r = data_way2_q[transfer_word_q];
+            end
+
+            2'd3: begin
+                flush_valid_r = valid_way3_q;
+                flush_dirty_r = dirty_way3_q;
+                flush_tag_r = tag_way3_q;
+                flush_data_r = data_way3_q[transfer_word_q];
+            end
+
+            default: begin
+                flush_valid_r = 1'b0;
+                flush_dirty_r = 1'b0;
+                flush_tag_r = {TAG_WIDTH{1'b0}};
+                flush_data_r = {DATA_WIDTH{1'b0}};
+            end
+        endcase
+    end
+
+    always @(*) begin
+        cpu_request_ready_o = 1'b0;
+        cpu_response_valid_o = 1'b0;
+        cpu_read_data_o = response_data_q;
+        flush_busy_o = 1'b0;
+        flush_done_o = 1'b0;
         memory_request_valid_o = 1'b0;
-        memory_write_o         = 1'b0;
-        memory_address_o       = {ADDRESS_WIDTH{1'b0}};
-        memory_write_data_o    = {DATA_WIDTH{1'b0}};
-        memory_write_strobe_o  = 4'b0000;
+        memory_write_o = 1'b0;
+        memory_address_o = {ADDRESS_WIDTH{1'b0}};
+        memory_write_data_o = {DATA_WIDTH{1'b0}};
+        memory_write_strobe_o = 4'b0000;
 
-        case (state_r)
+        case (state_q)
+            DCACHE_IDLE: begin
+                if (!flush_i && !flush_pending_q) begin
+                    cpu_request_ready_o = 1'b1;
+                end
+            end
+
             DCACHE_WRITEBACK_REQUEST: begin
                 memory_request_valid_o = 1'b1;
-                memory_write_o         = 1'b1;
-                memory_write_data_o    = data_array[(victim_index_r * WORDS_PER_LINE) +
-                                                     transfer_word_r];
-                memory_write_strobe_o  = 4'b1111;
-                memory_address_o       = (tag_array[victim_index_r] <<
-                                          LINE_WORD_OFFSET_WIDTH) <<
-                                          BYTE_OFFSET_WIDTH;
-                memory_address_o       = memory_address_o |
-                                          (transfer_word_r << BYTE_OFFSET_WIDTH);
+                memory_write_o = 1'b1;
+                memory_address_o = victim_tag_r;
+                memory_address_o =
+                    memory_address_o << LINE_ADDRESS_OFFSET_WIDTH;
+                memory_address_o =
+                    memory_address_o | transfer_byte_offset_w;
+                memory_write_data_o = victim_data_r;
+                memory_write_strobe_o = 4'b1111;
             end
 
             DCACHE_REFILL_REQUEST: begin
                 memory_request_valid_o = 1'b1;
-                memory_write_o         = 1'b0;
-                memory_address_o       = (request_address_r >>
-                                         (BYTE_OFFSET_WIDTH + LINE_WORD_OFFSET_WIDTH)) <<
-                                         (BYTE_OFFSET_WIDTH + LINE_WORD_OFFSET_WIDTH);
-                memory_address_o       = memory_address_o |
-                                         (transfer_word_r << BYTE_OFFSET_WIDTH);
+                memory_write_o = 1'b0;
+                memory_address_o = request_address_q;
+                memory_address_o =
+                    memory_address_o >> LINE_ADDRESS_OFFSET_WIDTH;
+                memory_address_o =
+                    memory_address_o << LINE_ADDRESS_OFFSET_WIDTH;
+                memory_address_o =
+                    memory_address_o | transfer_byte_offset_w;
+            end
+
+            DCACHE_RESPOND: begin
+                cpu_response_valid_o = 1'b1;
+            end
+
+            DCACHE_FLUSH_SCAN: begin
+                flush_busy_o = 1'b1;
             end
 
             DCACHE_FLUSH_WRITEBACK_REQUEST: begin
+                flush_busy_o = 1'b1;
                 memory_request_valid_o = 1'b1;
-                memory_write_o         = 1'b1;
-                memory_write_data_o    = data_array[(flush_line_r * WORDS_PER_LINE) +
-                                                     transfer_word_r];
-                memory_write_strobe_o  = 4'b1111;
-                memory_address_o       = (tag_array[flush_line_r] <<
-                                          LINE_WORD_OFFSET_WIDTH) <<
-                                          BYTE_OFFSET_WIDTH;
-                memory_address_o       = memory_address_o |
-                                          (transfer_word_r << BYTE_OFFSET_WIDTH);
+                memory_write_o = 1'b1;
+                memory_address_o = flush_tag_r;
+                memory_address_o =
+                    memory_address_o << LINE_ADDRESS_OFFSET_WIDTH;
+                memory_address_o =
+                    memory_address_o | transfer_byte_offset_w;
+                memory_write_data_o = flush_data_r;
+                memory_write_strobe_o = 4'b1111;
+            end
+
+            DCACHE_FLUSH_DONE: begin
+                flush_done_o = 1'b1;
             end
 
             default: begin
-                memory_request_valid_o = 1'b0;
+                cpu_request_ready_o = 1'b0;
             end
         endcase
     end
 
     always @(posedge clk_i or negedge rstn_i) begin
         if (!rstn_i) begin
-            state_r                <= DCACHE_IDLE;
-            request_address_r      <= {ADDRESS_WIDTH{1'b0}};
-            request_write_r        <= 1'b0;
-            request_write_data_r   <= {DATA_WIDTH{1'b0}};
-            request_write_strobe_r <= 4'b0000;
-            response_data_r        <= {DATA_WIDTH{1'b0}};
-            replay_after_miss_r    <= 1'b0;
-            victim_index_r         <= {LINE_INDEX_WIDTH{1'b0}};
-            replacement_pointer_r  <= {LINE_INDEX_WIDTH{1'b0}};
-            flush_line_r           <= {LINE_INDEX_WIDTH{1'b0}};
-            transfer_word_r        <= {WORD_INDEX_WIDTH{1'b0}};
-            hit_count_o            <= 32'b0;
-            miss_count_o           <= 32'b0;
-            writeback_count_o      <= 32'b0;
-
-            for (sequential_line_index = 0;
-                 sequential_line_index < LINE_COUNT;
-                 sequential_line_index = sequential_line_index + 1) begin
-                valid_array[sequential_line_index] <= 1'b0;
-                dirty_array[sequential_line_index] <= 1'b0;
-                tag_array[sequential_line_index]   <= {TAG_WIDTH{1'b0}};
-            end
+            state_q <= DCACHE_IDLE;
+            valid_way0_q <= 1'b0;
+            valid_way1_q <= 1'b0;
+            valid_way2_q <= 1'b0;
+            valid_way3_q <= 1'b0;
+            dirty_way0_q <= 1'b0;
+            dirty_way1_q <= 1'b0;
+            dirty_way2_q <= 1'b0;
+            dirty_way3_q <= 1'b0;
+            request_address_q <= {ADDRESS_WIDTH{1'b0}};
+            request_write_q <= 1'b0;
+            request_write_data_q <= {DATA_WIDTH{1'b0}};
+            request_write_strobe_q <= 4'b0000;
+            response_data_q <= {DATA_WIDTH{1'b0}};
+            replay_after_miss_q <= 1'b0;
+            flush_pending_q <= 1'b0;
+            victim_way_q <= 2'd0;
+            replacement_way_q <= 2'd0;
+            flush_way_q <= 2'd0;
+            transfer_word_q <= {WORD_INDEX_WIDTH{1'b0}};
+            hit_count_o <= 32'd0;
+            miss_count_o <= 32'd0;
+            writeback_count_o <= 32'd0;
         end else begin
-            case (state_r)
+            if (flush_i && (state_q != DCACHE_IDLE)) begin
+                flush_pending_q <= 1'b1;
+            end
+
+            case (state_q)
                 DCACHE_IDLE: begin
-                    if (flush_i) begin
-                        flush_line_r <= {LINE_INDEX_WIDTH{1'b0}};
-                        state_r      <= DCACHE_FLUSH_SCAN;
+                    if (flush_i || flush_pending_q) begin
+                        flush_pending_q <= 1'b0;
+                        flush_way_q <= 2'd0;
+                        transfer_word_q <= {WORD_INDEX_WIDTH{1'b0}};
+                        state_q <= DCACHE_FLUSH_SCAN;
                     end else if (cpu_request_valid_i) begin
-                        request_address_r      <= cpu_address_i;
-                        request_write_r        <= cpu_write_i;
-                        request_write_data_r   <= cpu_write_data_i;
-                        request_write_strobe_r <= cpu_write_strobe_i;
-                        replay_after_miss_r    <= 1'b0;
-                        state_r                <= DCACHE_LOOKUP;
+                        request_address_q <= cpu_address_i;
+                        request_write_q <= cpu_write_i;
+                        request_write_data_q <= cpu_write_data_i;
+                        request_write_strobe_q <= cpu_write_strobe_i;
+                        replay_after_miss_q <= 1'b0;
+                        state_q <= DCACHE_LOOKUP;
                     end
                 end
 
                 DCACHE_LOOKUP: begin
-                    if (lookup_hit) begin
-                        if (!replay_after_miss_r) begin
+                    if (lookup_hit_w) begin
+                        if (!replay_after_miss_q) begin
                             hit_count_o <= hit_count_o + 1'b1;
                         end
 
-                        if (request_write_r) begin
-                            for (byte_index = 0; byte_index < 4; byte_index = byte_index + 1) begin
-                                if (request_write_strobe_r[byte_index]) begin
-                                    data_array[(lookup_hit_index * WORDS_PER_LINE) +
-                                               request_word_index][byte_index*8 +: 8]
-                                        <= request_write_data_r[byte_index*8 +: 8];
+                        if (request_write_q) begin
+                            case (lookup_hit_way_r)
+                                2'd0: begin
+                                    dirty_way0_q <= 1'b1;
                                 end
-                            end
-                            dirty_array[lookup_hit_index] <= 1'b1;
-                            response_data_r               <= {DATA_WIDTH{1'b0}};
+
+                                2'd1: begin
+                                    dirty_way1_q <= 1'b1;
+                                end
+
+                                2'd2: begin
+                                    dirty_way2_q <= 1'b1;
+                                end
+
+                                2'd3: begin
+                                    dirty_way3_q <= 1'b1;
+                                end
+
+                                default: begin
+                                    dirty_way0_q <= dirty_way0_q;
+                                end
+                            endcase
+
+                            response_data_q <= {DATA_WIDTH{1'b0}};
                         end else begin
-                            response_data_r <= data_array[(lookup_hit_index * WORDS_PER_LINE) +
-                                                          request_word_index];
+                            response_data_q <= lookup_data_r;
                         end
 
-                        replay_after_miss_r <= 1'b0;
-                        state_r             <= DCACHE_RESPOND;
+                        replay_after_miss_q <= 1'b0;
+                        state_q <= DCACHE_RESPOND;
                     end else begin
-                        victim_index_r      <= selected_victim_index;
-                        transfer_word_r     <= {WORD_INDEX_WIDTH{1'b0}};
-                        replay_after_miss_r <= 1'b1;
-                        miss_count_o        <= miss_count_o + 1'b1;
+                        victim_way_q <= selected_victim_way_r;
+                        transfer_word_q <= {WORD_INDEX_WIDTH{1'b0}};
+                        replay_after_miss_q <= 1'b1;
+                        miss_count_o <= miss_count_o + 1'b1;
 
-                        if (selected_victim_index == LINE_COUNT-1) begin
-                            replacement_pointer_r <= {LINE_INDEX_WIDTH{1'b0}};
+                        if (selected_victim_way_r == LINE_COUNT-1) begin
+                            replacement_way_q <= 2'd0;
                         end else begin
-                            replacement_pointer_r <= selected_victim_index + 1'b1;
+                            replacement_way_q <=
+                                selected_victim_way_r + 1'b1;
                         end
 
-                        if (valid_array[selected_victim_index] &&
-                            dirty_array[selected_victim_index]) begin
-                            writeback_count_o <= writeback_count_o + 1'b1;
-                            state_r           <= DCACHE_WRITEBACK_REQUEST;
+                        if (selected_victim_valid_r &&
+                            selected_victim_dirty_r) begin
+                            writeback_count_o <=
+                                writeback_count_o + 1'b1;
+                            state_q <= DCACHE_WRITEBACK_REQUEST;
                         end else begin
-                            valid_array[selected_victim_index] <= 1'b0;
-                            dirty_array[selected_victim_index] <= 1'b0;
-                            tag_array[selected_victim_index]   <= request_tag;
-                            state_r                            <= DCACHE_REFILL_REQUEST;
+                            case (selected_victim_way_r)
+                                2'd0: begin
+                                    valid_way0_q <= 1'b0;
+                                    dirty_way0_q <= 1'b0;
+                                end
+
+                                2'd1: begin
+                                    valid_way1_q <= 1'b0;
+                                    dirty_way1_q <= 1'b0;
+                                end
+
+                                2'd2: begin
+                                    valid_way2_q <= 1'b0;
+                                    dirty_way2_q <= 1'b0;
+                                end
+
+                                2'd3: begin
+                                    valid_way3_q <= 1'b0;
+                                    dirty_way3_q <= 1'b0;
+                                end
+
+                                default: begin
+                                    valid_way0_q <= valid_way0_q;
+                                    dirty_way0_q <= dirty_way0_q;
+                                end
+                            endcase
+
+                            state_q <= DCACHE_REFILL_REQUEST;
                         end
                     end
                 end
 
                 DCACHE_WRITEBACK_REQUEST: begin
                     if (memory_request_ready_i) begin
-                        if (transfer_word_r == WORDS_PER_LINE-1) begin
-                            valid_array[victim_index_r] <= 1'b0;
-                            dirty_array[victim_index_r] <= 1'b0;
-                            tag_array[victim_index_r]   <= request_tag;
-                            transfer_word_r             <= {WORD_INDEX_WIDTH{1'b0}};
-                            state_r                     <= DCACHE_REFILL_REQUEST;
+                        if (transfer_word_q == WORDS_PER_LINE-1) begin
+                            case (victim_way_q)
+                                2'd0: begin
+                                    valid_way0_q <= 1'b0;
+                                    dirty_way0_q <= 1'b0;
+                                end
+
+                                2'd1: begin
+                                    valid_way1_q <= 1'b0;
+                                    dirty_way1_q <= 1'b0;
+                                end
+
+                                2'd2: begin
+                                    valid_way2_q <= 1'b0;
+                                    dirty_way2_q <= 1'b0;
+                                end
+
+                                2'd3: begin
+                                    valid_way3_q <= 1'b0;
+                                    dirty_way3_q <= 1'b0;
+                                end
+
+                                default: begin
+                                    valid_way0_q <= valid_way0_q;
+                                    dirty_way0_q <= dirty_way0_q;
+                                end
+                            endcase
+
+                            transfer_word_q <=
+                                {WORD_INDEX_WIDTH{1'b0}};
+                            state_q <= DCACHE_REFILL_REQUEST;
                         end else begin
-                            transfer_word_r <= transfer_word_r + 1'b1;
+                            transfer_word_q <= transfer_word_q + 1'b1;
                         end
                     end
                 end
 
                 DCACHE_REFILL_REQUEST: begin
                     if (memory_request_ready_i) begin
-                        state_r <= DCACHE_REFILL_WAIT;
+                        state_q <= DCACHE_REFILL_WAIT;
                     end
                 end
 
                 DCACHE_REFILL_WAIT: begin
                     if (memory_response_valid_i) begin
-                        data_array[(victim_index_r * WORDS_PER_LINE) + transfer_word_r]
-                            <= memory_read_data_i;
+                        if (transfer_word_q == WORDS_PER_LINE-1) begin
+                            case (victim_way_q)
+                                2'd0: begin
+                                    valid_way0_q <= 1'b1;
+                                    dirty_way0_q <= 1'b0;
+                                end
 
-                        if (transfer_word_r == WORDS_PER_LINE-1) begin
-                            valid_array[victim_index_r] <= 1'b1;
-                            dirty_array[victim_index_r] <= 1'b0;
-                            transfer_word_r             <= {WORD_INDEX_WIDTH{1'b0}};
-                            state_r                     <= DCACHE_LOOKUP;
+                                2'd1: begin
+                                    valid_way1_q <= 1'b1;
+                                    dirty_way1_q <= 1'b0;
+                                end
+
+                                2'd2: begin
+                                    valid_way2_q <= 1'b1;
+                                    dirty_way2_q <= 1'b0;
+                                end
+
+                                2'd3: begin
+                                    valid_way3_q <= 1'b1;
+                                    dirty_way3_q <= 1'b0;
+                                end
+
+                                default: begin
+                                    valid_way0_q <= valid_way0_q;
+                                    dirty_way0_q <= dirty_way0_q;
+                                end
+                            endcase
+
+                            transfer_word_q <=
+                                {WORD_INDEX_WIDTH{1'b0}};
+                            state_q <= DCACHE_LOOKUP;
                         end else begin
-                            transfer_word_r <= transfer_word_r + 1'b1;
-                            state_r         <= DCACHE_REFILL_REQUEST;
+                            transfer_word_q <= transfer_word_q + 1'b1;
+                            state_q <= DCACHE_REFILL_REQUEST;
                         end
                     end
                 end
 
                 DCACHE_RESPOND: begin
-                    state_r <= DCACHE_IDLE;
+                    state_q <= DCACHE_IDLE;
                 end
 
                 DCACHE_FLUSH_SCAN: begin
-                    if (valid_array[flush_line_r] && dirty_array[flush_line_r]) begin
-                        transfer_word_r <= {WORD_INDEX_WIDTH{1'b0}};
-                        state_r         <= DCACHE_FLUSH_WRITEBACK_REQUEST;
+                    if (flush_valid_r && flush_dirty_r) begin
+                        transfer_word_q <=
+                            {WORD_INDEX_WIDTH{1'b0}};
+                        state_q <= DCACHE_FLUSH_WRITEBACK_REQUEST;
                     end else begin
-                        valid_array[flush_line_r] <= 1'b0;
-                        dirty_array[flush_line_r] <= 1'b0;
+                        case (flush_way_q)
+                            2'd0: begin
+                                valid_way0_q <= 1'b0;
+                                dirty_way0_q <= 1'b0;
+                            end
 
-                        if (flush_line_r == LINE_COUNT-1) begin
-                            state_r <= DCACHE_FLUSH_DONE;
+                            2'd1: begin
+                                valid_way1_q <= 1'b0;
+                                dirty_way1_q <= 1'b0;
+                            end
+
+                            2'd2: begin
+                                valid_way2_q <= 1'b0;
+                                dirty_way2_q <= 1'b0;
+                            end
+
+                            2'd3: begin
+                                valid_way3_q <= 1'b0;
+                                dirty_way3_q <= 1'b0;
+                            end
+
+                            default: begin
+                                valid_way0_q <= valid_way0_q;
+                                dirty_way0_q <= dirty_way0_q;
+                            end
+                        endcase
+
+                        if (flush_way_q == LINE_COUNT-1) begin
+                            state_q <= DCACHE_FLUSH_DONE;
                         end else begin
-                            flush_line_r <= flush_line_r + 1'b1;
+                            flush_way_q <= flush_way_q + 1'b1;
                         end
                     end
                 end
 
                 DCACHE_FLUSH_WRITEBACK_REQUEST: begin
                     if (memory_request_ready_i) begin
-                        if (transfer_word_r == WORDS_PER_LINE-1) begin
-                            valid_array[flush_line_r] <= 1'b0;
-                            dirty_array[flush_line_r] <= 1'b0;
-                            transfer_word_r           <= {WORD_INDEX_WIDTH{1'b0}};
+                        if (transfer_word_q == WORDS_PER_LINE-1) begin
+                            case (flush_way_q)
+                                2'd0: begin
+                                    valid_way0_q <= 1'b0;
+                                    dirty_way0_q <= 1'b0;
+                                end
 
-                            if (flush_line_r == LINE_COUNT-1) begin
-                                state_r <= DCACHE_FLUSH_DONE;
+                                2'd1: begin
+                                    valid_way1_q <= 1'b0;
+                                    dirty_way1_q <= 1'b0;
+                                end
+
+                                2'd2: begin
+                                    valid_way2_q <= 1'b0;
+                                    dirty_way2_q <= 1'b0;
+                                end
+
+                                2'd3: begin
+                                    valid_way3_q <= 1'b0;
+                                    dirty_way3_q <= 1'b0;
+                                end
+
+                                default: begin
+                                    valid_way0_q <= valid_way0_q;
+                                    dirty_way0_q <= dirty_way0_q;
+                                end
+                            endcase
+
+                            transfer_word_q <=
+                                {WORD_INDEX_WIDTH{1'b0}};
+
+                            if (flush_way_q == LINE_COUNT-1) begin
+                                state_q <= DCACHE_FLUSH_DONE;
                             end else begin
-                                flush_line_r <= flush_line_r + 1'b1;
-                                state_r      <= DCACHE_FLUSH_SCAN;
+                                flush_way_q <= flush_way_q + 1'b1;
+                                state_q <= DCACHE_FLUSH_SCAN;
                             end
                         end else begin
-                            transfer_word_r <= transfer_word_r + 1'b1;
+                            transfer_word_q <= transfer_word_q + 1'b1;
                         end
                     end
                 end
 
                 DCACHE_FLUSH_DONE: begin
-                    state_r <= DCACHE_IDLE;
+                    state_q <= DCACHE_IDLE;
                 end
 
                 default: begin
-                    state_r <= DCACHE_IDLE;
+                    state_q <= DCACHE_IDLE;
+                    valid_way0_q <= 1'b0;
+                    valid_way1_q <= 1'b0;
+                    valid_way2_q <= 1'b0;
+                    valid_way3_q <= 1'b0;
+                    dirty_way0_q <= 1'b0;
+                    dirty_way1_q <= 1'b0;
+                    dirty_way2_q <= 1'b0;
+                    dirty_way3_q <= 1'b0;
+                    flush_pending_q <= 1'b0;
                 end
             endcase
         end
     end
 
-    initial begin
-        if ((DATA_WIDTH != 32) ||
-            (LINE_COUNT < 1) ||
-            (WORDS_PER_LINE < 1) ||
-            ((WORDS_PER_LINE & (WORDS_PER_LINE-1)) != 0)) begin
-            $display("ERROR: invalid l1_dcache_fa parameters");
-            $finish;
+    always @(posedge clk_i) begin
+        if ((state_q == DCACHE_LOOKUP) &&
+            !lookup_hit_w &&
+            !(selected_victim_valid_r &&
+              selected_victim_dirty_r)) begin
+            case (selected_victim_way_r)
+                2'd0: begin
+                    tag_way0_q <= request_tag_w;
+                end
+
+                2'd1: begin
+                    tag_way1_q <= request_tag_w;
+                end
+
+                2'd2: begin
+                    tag_way2_q <= request_tag_w;
+                end
+
+                2'd3: begin
+                    tag_way3_q <= request_tag_w;
+                end
+
+                default: begin
+                    tag_way0_q <= tag_way0_q;
+                end
+            endcase
+        end else if ((state_q == DCACHE_WRITEBACK_REQUEST) &&
+                     memory_request_ready_i &&
+                     (transfer_word_q == WORDS_PER_LINE-1)) begin
+            case (victim_way_q)
+                2'd0: begin
+                    tag_way0_q <= request_tag_w;
+                end
+
+                2'd1: begin
+                    tag_way1_q <= request_tag_w;
+                end
+
+                2'd2: begin
+                    tag_way2_q <= request_tag_w;
+                end
+
+                2'd3: begin
+                    tag_way3_q <= request_tag_w;
+                end
+
+                default: begin
+                    tag_way0_q <= tag_way0_q;
+                end
+            endcase
         end
     end
+
+    always @(posedge clk_i) begin
+        if ((state_q == DCACHE_LOOKUP) &&
+            lookup_hit_w &&
+            request_write_q) begin
+            case (lookup_hit_way_r)
+                2'd0: begin
+                    data_way0_q[request_word_index_w] <=
+                        merge_write_data(
+                            data_way0_q[request_word_index_w],
+                            request_write_data_q,
+                            request_write_strobe_q
+                        );
+                end
+
+                2'd1: begin
+                    data_way1_q[request_word_index_w] <=
+                        merge_write_data(
+                            data_way1_q[request_word_index_w],
+                            request_write_data_q,
+                            request_write_strobe_q
+                        );
+                end
+
+                2'd2: begin
+                    data_way2_q[request_word_index_w] <=
+                        merge_write_data(
+                            data_way2_q[request_word_index_w],
+                            request_write_data_q,
+                            request_write_strobe_q
+                        );
+                end
+
+                2'd3: begin
+                    data_way3_q[request_word_index_w] <=
+                        merge_write_data(
+                            data_way3_q[request_word_index_w],
+                            request_write_data_q,
+                            request_write_strobe_q
+                        );
+                end
+
+                default: begin
+                    data_way0_q[request_word_index_w] <=
+                        data_way0_q[request_word_index_w];
+                end
+            endcase
+        end else if ((state_q == DCACHE_REFILL_WAIT) &&
+                     memory_response_valid_i) begin
+            case (victim_way_q)
+                2'd0: begin
+                    data_way0_q[transfer_word_q] <=
+                        memory_read_data_i;
+                end
+
+                2'd1: begin
+                    data_way1_q[transfer_word_q] <=
+                        memory_read_data_i;
+                end
+
+                2'd2: begin
+                    data_way2_q[transfer_word_q] <=
+                        memory_read_data_i;
+                end
+
+                2'd3: begin
+                    data_way3_q[transfer_word_q] <=
+                        memory_read_data_i;
+                end
+
+                default: begin
+                    data_way0_q[transfer_word_q] <=
+                        data_way0_q[transfer_word_q];
+                end
+            endcase
+        end
+    end
+
 endmodule

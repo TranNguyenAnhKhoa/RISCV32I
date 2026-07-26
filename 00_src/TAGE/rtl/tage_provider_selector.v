@@ -1,22 +1,21 @@
-(* use_dsp = "no" *)
 module tage_provider_selector #(
     parameter COUNTER_WIDTH = 3,
-    parameter USEFUL_WIDTH  = 1
+    parameter USEFUL_WIDTH = 1
 ) (
-    input                      base_taken_i,
-    input                      table1_hit_i,
-    input  [COUNTER_WIDTH-1:0] table1_counter_i,
-    input  [USEFUL_WIDTH-1:0]  table1_useful_i,
-    input                      table2_hit_i,
-    input  [COUNTER_WIDTH-1:0] table2_counter_i,
-    input  [USEFUL_WIDTH-1:0]  table2_useful_i,
-    input                      table3_hit_i,
-    input  [COUNTER_WIDTH-1:0] table3_counter_i,
-    input  [USEFUL_WIDTH-1:0]  table3_useful_i,
-    output                     predict_taken_o,
-    output [1:0]               provider_table_o,
-    output                     provider_taken_o,
-    output                     alternate_taken_o
+    input base_taken_i,
+    input table1_hit_i,
+    input [COUNTER_WIDTH-1:0] table1_counter_i,
+    input [USEFUL_WIDTH-1:0] table1_useful_i,
+    input table2_hit_i,
+    input [COUNTER_WIDTH-1:0] table2_counter_i,
+    input [USEFUL_WIDTH-1:0] table2_useful_i,
+    input table3_hit_i,
+    input [COUNTER_WIDTH-1:0] table3_counter_i,
+    input [USEFUL_WIDTH-1:0] table3_useful_i,
+    output predict_taken_o,
+    output [1:0] provider_table_o,
+    output provider_taken_o,
+    output alternate_taken_o
 );
 
     localparam [COUNTER_WIDTH-1:0] WEAKLY_NOT_TAKEN = {
@@ -96,14 +95,5 @@ module tage_provider_selector #(
             predict_taken_r = provider_taken_r;
         end
     end
-
-    // synthesis translate_off
-    initial begin
-        if ((COUNTER_WIDTH < 2) || (USEFUL_WIDTH < 1)) begin
-            $display("ERROR: invalid tage_provider_selector parameter");
-            $finish;
-        end
-    end
-    // synthesis translate_on
 
 endmodule

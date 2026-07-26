@@ -8,7 +8,6 @@ module cache_l1_tb;
     reg reset_n;
     integer pass_count;
     integer fail_count;
-    integer memory_index;
 
     reg         icache_cpu_request_valid;
     reg  [31:0] icache_cpu_address;
@@ -25,6 +24,7 @@ module cache_l1_tb;
     reg         icache_memory_ready_enable;
     wire [31:0] icache_hit_count;
     wire [31:0] icache_miss_count;
+    reg         high_icache_refill_seen;
 
     reg         dcache_cpu_request_valid;
     reg         dcache_cpu_write;
@@ -46,6 +46,7 @@ module cache_l1_tb;
     wire        dcache_memory_response_valid;
     wire [31:0] dcache_memory_read_data;
     reg         dcache_memory_ready_enable;
+    reg         high_address_writeback_seen;
     wire [31:0] dcache_hit_count;
     wire [31:0] dcache_miss_count;
     wire [31:0] dcache_writeback_count;
@@ -54,8 +55,29 @@ module cache_l1_tb;
         clock = ~clock;
     end
 
+    always @(posedge clock or negedge reset_n) begin
+        if (!reset_n) begin
+            high_icache_refill_seen <= 1'b0;
+        end else if (icache_memory_request_valid &&
+                     icache_memory_request_ready &&
+                     icache_memory_address[31]) begin
+            high_icache_refill_seen <= 1'b1;
+        end
+    end
+
+    always @(posedge clock or negedge reset_n) begin
+        if (!reset_n) begin
+            high_address_writeback_seen <= 1'b0;
+        end else if (dcache_memory_request_valid &&
+                     dcache_memory_request_ready &&
+                     dcache_memory_write &&
+                     dcache_memory_address[31]) begin
+            high_address_writeback_seen <= 1'b1;
+        end
+    end
+
     l1_icache_fa #(
-        .LINE_COUNT    (2),
+        .LINE_COUNT    (4),
         .WORDS_PER_LINE(4)
     ) instruction_cache (
         .clk_i                 (clock),
@@ -94,7 +116,7 @@ module cache_l1_tb;
     );
 
     l1_dcache_fa #(
-        .LINE_COUNT    (2),
+        .LINE_COUNT    (4),
         .WORDS_PER_LINE(4)
     ) data_cache (
         .clk_i                 (clock),
@@ -261,6 +283,7 @@ module cache_l1_tb;
         icache_cpu_address          = 32'b0;
         icache_invalidate           = 1'b0;
         icache_memory_ready_enable  = 1'b1;
+        high_icache_refill_seen     = 1'b0;
         dcache_cpu_request_valid    = 1'b0;
         dcache_cpu_write            = 1'b0;
         dcache_cpu_address          = 32'b0;
@@ -268,11 +291,73 @@ module cache_l1_tb;
         dcache_cpu_write_strobe     = 4'b0000;
         dcache_flush                = 1'b0;
         dcache_memory_ready_enable  = 1'b1;
+        high_address_writeback_seen = 1'b0;
 
-        for (memory_index = 0; memory_index < MEMORY_WORD_COUNT; memory_index = memory_index + 1) begin
-            instruction_memory.memory[memory_index] = 32'ha0000000 + memory_index;
-            data_memory.memory[memory_index]        = 32'hb0000000 + memory_index;
-        end
+        instruction_memory.memory[0]  = 32'ha0000000;
+        instruction_memory.memory[1]  = 32'ha0000001;
+        instruction_memory.memory[2]  = 32'ha0000002;
+        instruction_memory.memory[3]  = 32'ha0000003;
+        instruction_memory.memory[4]  = 32'ha0000004;
+        instruction_memory.memory[5]  = 32'ha0000005;
+        instruction_memory.memory[6]  = 32'ha0000006;
+        instruction_memory.memory[7]  = 32'ha0000007;
+        instruction_memory.memory[8]  = 32'ha0000008;
+        instruction_memory.memory[9]  = 32'ha0000009;
+        instruction_memory.memory[10] = 32'ha000000a;
+        instruction_memory.memory[11] = 32'ha000000b;
+        instruction_memory.memory[12] = 32'ha000000c;
+        instruction_memory.memory[13] = 32'ha000000d;
+        instruction_memory.memory[14] = 32'ha000000e;
+        instruction_memory.memory[15] = 32'ha000000f;
+        instruction_memory.memory[16] = 32'ha0000010;
+        instruction_memory.memory[17] = 32'ha0000011;
+        instruction_memory.memory[18] = 32'ha0000012;
+        instruction_memory.memory[19] = 32'ha0000013;
+        instruction_memory.memory[20] = 32'ha0000014;
+        instruction_memory.memory[21] = 32'ha0000015;
+        instruction_memory.memory[22] = 32'ha0000016;
+        instruction_memory.memory[23] = 32'ha0000017;
+        instruction_memory.memory[24] = 32'ha0000018;
+        instruction_memory.memory[25] = 32'ha0000019;
+        instruction_memory.memory[26] = 32'ha000001a;
+        instruction_memory.memory[27] = 32'ha000001b;
+        instruction_memory.memory[28] = 32'ha000001c;
+        instruction_memory.memory[29] = 32'ha000001d;
+        instruction_memory.memory[30] = 32'ha000001e;
+        instruction_memory.memory[31] = 32'ha000001f;
+
+        data_memory.memory[0]  = 32'hb0000000;
+        data_memory.memory[1]  = 32'hb0000001;
+        data_memory.memory[2]  = 32'hb0000002;
+        data_memory.memory[3]  = 32'hb0000003;
+        data_memory.memory[4]  = 32'hb0000004;
+        data_memory.memory[5]  = 32'hb0000005;
+        data_memory.memory[6]  = 32'hb0000006;
+        data_memory.memory[7]  = 32'hb0000007;
+        data_memory.memory[8]  = 32'hb0000008;
+        data_memory.memory[9]  = 32'hb0000009;
+        data_memory.memory[10] = 32'hb000000a;
+        data_memory.memory[11] = 32'hb000000b;
+        data_memory.memory[12] = 32'hb000000c;
+        data_memory.memory[13] = 32'hb000000d;
+        data_memory.memory[14] = 32'hb000000e;
+        data_memory.memory[15] = 32'hb000000f;
+        data_memory.memory[16] = 32'hb0000010;
+        data_memory.memory[17] = 32'hb0000011;
+        data_memory.memory[18] = 32'hb0000012;
+        data_memory.memory[19] = 32'hb0000013;
+        data_memory.memory[20] = 32'hb0000014;
+        data_memory.memory[21] = 32'hb0000015;
+        data_memory.memory[22] = 32'hb0000016;
+        data_memory.memory[23] = 32'hb0000017;
+        data_memory.memory[24] = 32'hb0000018;
+        data_memory.memory[25] = 32'hb0000019;
+        data_memory.memory[26] = 32'hb000001a;
+        data_memory.memory[27] = 32'hb000001b;
+        data_memory.memory[28] = 32'hb000001c;
+        data_memory.memory[29] = 32'hb000001d;
+        data_memory.memory[30] = 32'hb000001e;
+        data_memory.memory[31] = 32'hb000001f;
 
         repeat (4) @(posedge clock);
         @(negedge clock);
@@ -295,7 +380,9 @@ module cache_l1_tb;
             end
         join
 
-        icache_read_and_check(32'h00000020, 32'ha0000008, "I-cache round-robin replacement");
+        icache_read_and_check(32'h00000020, 32'ha0000008, "I-cache third-way fill");
+        icache_read_and_check(32'h00000030, 32'ha000000c, "I-cache fourth-way fill");
+        icache_read_and_check(32'h00000040, 32'ha0000010, "I-cache round-robin replacement");
         icache_read_and_check(32'h00000000, 32'ha0000000, "I-cache evicted line re-miss");
 
         while (!icache_cpu_request_ready) begin
@@ -307,8 +394,34 @@ module cache_l1_tb;
         @(negedge clock);
         icache_invalidate = 1'b0;
         icache_read_and_check(32'h00000004, 32'ha0000001, "I-cache invalidate forces miss");
+
+        icache_memory_ready_enable = 1'b0;
+        fork
+            begin
+                wait (icache_memory_request_valid === 1'b1);
+                @(negedge clock);
+                icache_invalidate = 1'b1;
+                @(posedge clock);
+                @(negedge clock);
+                icache_invalidate = 1'b0;
+                repeat (3) @(posedge clock);
+                icache_memory_ready_enable = 1'b1;
+            end
+            begin
+                icache_read_and_check(32'h00000030, 32'ha000000c,
+                                      "I-cache busy invalidate response");
+            end
+        join
+
+        icache_read_and_check(32'h00000030, 32'ha000000c,
+                              "I-cache pending invalidate re-miss");
+        icache_read_and_check(32'h80000000, 32'ha0000000,
+                              "I-cache high-address refill");
+        check_value("I-cache preserves refill address MSB",
+                    {31'b0, high_icache_refill_seen},
+                    32'd1);
         check_value("I-cache hit counter", icache_hit_count, 32'd2);
-        check_value("I-cache miss counter", icache_miss_count, 32'd5);
+        check_value("I-cache miss counter", icache_miss_count, 32'd10);
 
         $display("\n========== FULLY-ASSOCIATIVE L1 D-CACHE TESTS ==========");
         dcache_read_and_check(32'h00000000, 32'hb0000000, "D-cache cold load miss");
@@ -331,19 +444,62 @@ module cache_l1_tb;
             end
         join
 
-        dcache_read_and_check(32'h00000020, 32'hb0000008, "D-cache dirty-victim replacement");
-        check_value("D-cache dirty line writeback", data_memory.memory[0], 32'h123400aa);
-
+        dcache_read_and_check(32'h00000020, 32'hb0000008, "D-cache third-way fill");
         dcache_write(32'h00000030, 32'hdeadbeef, 4'b1111);
         dcache_read_and_check(32'h00000030, 32'hdeadbeef, "D-cache write-allocate hit replay");
         check_value("D-cache write-back deferred", data_memory.memory[12], 32'hb000000c);
+        dcache_read_and_check(32'h00000040, 32'hb0000010,
+                              "D-cache dirty-victim replacement");
+        check_value("D-cache dirty line writeback", data_memory.memory[0], 32'h123400aa);
 
         flush_dcache();
         check_value("D-cache flush writes dirty line", data_memory.memory[12], 32'hdeadbeef);
         dcache_read_and_check(32'h00000030, 32'hdeadbeef, "D-cache post-flush miss");
-        check_value("D-cache hit counter", dcache_hit_count, 32'd6);
-        check_value("D-cache miss counter", dcache_miss_count, 32'd5);
-        check_value("D-cache eviction writeback count", dcache_writeback_count, 32'd1);
+
+        dcache_write(32'h80000000, 32'hcafebabe, 4'b1111);
+        dcache_read_and_check(32'h80000000, 32'hcafebabe,
+                              "D-cache high-address hit");
+        dcache_read_and_check(32'h00000040, 32'hb0000010,
+                              "D-cache high-address victim setup");
+        dcache_read_and_check(32'h00000050, 32'hb0000014,
+                              "D-cache fourth-way refill");
+
+        dcache_write(32'h00000060, 32'h13579bdf, 4'b1111);
+        dcache_memory_ready_enable = 1'b0;
+
+        fork
+            begin
+                wait (dcache_memory_request_valid === 1'b1);
+                @(negedge clock);
+                dcache_flush = 1'b1;
+                @(posedge clock);
+                @(negedge clock);
+                dcache_flush = 1'b0;
+                repeat (3) @(posedge clock);
+                dcache_memory_ready_enable = 1'b1;
+                wait (dcache_flush_done === 1'b1);
+            end
+            begin
+                dcache_read_and_check(32'h00000070, 32'hb000001c,
+                                      "D-cache busy flush response");
+            end
+        join
+
+        check_value("D-cache preserves writeback address MSB",
+                    {31'b0, high_address_writeback_seen},
+                    32'd1);
+        check_value("D-cache high-address writeback data",
+                    data_memory.memory[0],
+                    32'hcafebabe);
+        check_value("D-cache pending flush writeback",
+                    data_memory.memory[24],
+                    32'h13579bdf);
+        dcache_read_and_check(32'h00000070, 32'hb000001c,
+                              "D-cache pending flush re-miss");
+
+        check_value("D-cache hit counter", dcache_hit_count, 32'd7);
+        check_value("D-cache miss counter", dcache_miss_count, 32'd12);
+        check_value("D-cache eviction writeback count", dcache_writeback_count, 32'd2);
 
         $display("\n=========================================================");
         $display("CACHE TEST SUMMARY: PASS=%0d FAIL=%0d TOTAL=%0d",
@@ -363,6 +519,7 @@ module cache_l1_tb;
     initial begin
         #100000;
         $display("ERROR: Cache testbench timeout");
+        fail_count = fail_count + 1;
         $finish;
     end
 

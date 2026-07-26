@@ -1,28 +1,23 @@
-(* use_dsp = "no" *)
 module tage_global_history #(
-    parameter HISTORY_WIDTH       = 32,
+    parameter HISTORY_WIDTH = 32,
     parameter SPECULATIVE_HISTORY = 0
 ) (
-    input                      clk_i,
-    input                      rstn_i,
-    input                      predict_accept_i,
-    input                      predict_taken_i,
-    input                      history_recover_valid_i,
-    input  [HISTORY_WIDTH-1:0] history_recover_i,
-    input                      update_valid_i,
-    input                      update_mispredict_i,
-    input                      update_taken_i,
-    input  [HISTORY_WIDTH-1:0] update_history_i,
+    input clk_i,
+    input rstn_i,
+    input predict_accept_i,
+    input predict_taken_i,
+    input history_recover_valid_i,
+    input [HISTORY_WIDTH-1:0] history_recover_i,
+    input update_valid_i,
+    input update_mispredict_i,
+    input update_taken_i,
+    input [HISTORY_WIDTH-1:0] update_history_i,
     output [HISTORY_WIDTH-1:0] history_o
 );
 
     reg [HISTORY_WIDTH-1:0] history_q;
 
     assign history_o = history_q;
-
-    initial begin
-        history_q = {HISTORY_WIDTH{1'b0}};
-    end
 
     generate
         if (SPECULATIVE_HISTORY != 0) begin : generate_speculative_history
@@ -56,16 +51,5 @@ module tage_global_history #(
             end
         end
     endgenerate
-
-    // synthesis translate_off
-    initial begin
-        if ((HISTORY_WIDTH < 2) ||
-            ((SPECULATIVE_HISTORY != 0) &&
-             (SPECULATIVE_HISTORY != 1))) begin
-            $display("ERROR: invalid tage_global_history parameter");
-            $finish;
-        end
-    end
-    // synthesis translate_on
 
 endmodule
