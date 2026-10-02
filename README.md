@@ -18,6 +18,8 @@ Ngoài core chính, repository đã có các khối nghiên cứu độc lập:
 - L1 I-cache và D-cache blocking, fully-associative.
 - Bộ dự đoán nhánh bimodal counter 2-bit.
 - Bộ dự đoán nhánh Compact TAGE-3.
+- Khối Debug Module (DM) & Debug Module Interface (DMI) theo chuẩn RISC-V Debug Spec 0.13.2.
+- Khối Control and Status Registers (CSR Unit) & chuẩn Zicsr theo RISC-V Privileged Spec v1.12.
 - Môi trường kiểm thử SystemVerilog theo cấu trúc UVM cơ bản nhưng không dùng
   thư viện UVM.
 - Luồng bare-metal RISC-V GNU Toolchain để tạo assembly, ELF, disassembly,
@@ -25,7 +27,7 @@ Ngoài core chính, repository đã có các khối nghiên cứu độc lập:
 - Mười chương trình assembly RV32I dùng để kiểm tra CPU.
 
 Core chưa phải một implementation RISC-V architectural-compliant hoàn chỉnh vì
-chưa có trap chính xác, CSR, privilege mode, interrupt và external memory bus.
+chưa nối các khối độc lập CSR, privilege mode, interrupt và external memory bus vào pipeline chính.
 
 ## Trạng thái hiện tại
 
@@ -39,10 +41,12 @@ chưa có trap chính xác, CSR, privilege mode, interrupt và external memory b
 | L1 I-cache/D-cache | Khối độc lập, style ASIC | Chưa | Testbench có 38 checks; chưa chạy lại sau refactor |
 | Bimodal predictor 2-bit | Khối độc lập | Chưa | Chưa có testbench riêng trong folder |
 | Compact TAGE-3 | Khối độc lập, style ASIC | Chưa | Có 4 testbench Verilog; chưa chạy lại sau refactor |
+| Debug Module (DM/DMI) v0.13 | Khối độc lập, style ASIC | Chưa | Testbench Verilator 14 checks (14 PASS / 0 FAIL) |
+| CSR Unit (Zicsr & Machine CSRs) | Khối độc lập, style ASIC | Chưa | Testbench Verilator 27 checks (27 PASS / 0 FAIL) |
 | C-to-IMEM tool flow | Đã viết | Không áp dụng | Source toolchain đã clone; executable compiler local chưa được build/cài |
 | 10 thuật toán assembly RV32I | Đã viết | Chạy qua IMEM/DMEM | Chưa có regression tự động nối toàn bộ signature với core |
 | RV32M | Chưa triển khai | Chưa | Mới có hằng encoding, chưa có execution unit/decode/test |
-| Trap/CSR/interrupt | Chưa triển khai | Chưa | Chưa có |
+| Trap/CSR/interrupt core integration | Đang chuẩn bị tích hợp | Chưa | Chờ nối CSR vào ID/EX/WB và Hazard unit |
 | External bus/MMIO | Chưa triển khai | Chưa | Chưa có |
 
 Các số `82 PASS / 0 FAIL`, `40 PASS / 0 FAIL` và kết quả cache từng được ghi
@@ -71,6 +75,10 @@ flowchart LR
     BP["Bimodal / TAGE\nkhối độc lập"] -. "tích hợp tương lai" .-> PC
     ICACHE["L1 I-cache\nkhối độc lập"] -. "tích hợp tương lai" .-> PC
     DCACHE["L1 D-cache\nkhối độc lập"] -. "tích hợp tương lai" .-> MEM
+    DM["Debug Module (DM/DMI)\nkhối độc lập"] -. "halt/resume" .-> HAZARD
+    DM -. "đọc/ghi GPR & PC" .-> ID
+    CSR["CSR Unit (Zicsr)\nkhối độc lập"] -. "trap redirect / mret" .-> PC
+    CSR -. "rdata / wdata" .-> ID
 ```
 
 ### IF — Instruction Fetch
@@ -252,6 +260,29 @@ README con trong `00_src/TAGE` còn mô tả một số hành vi FPGA/reset cũ;
 trong README gốc này được ưu tiên cho source hiện tại và phần tài liệu con cần
 được đồng bộ ở một mốc sau.
 
+### RISC-V Debug Module (DM) và DMI v0.13
+
+Folder [`00_src/DMI`](00_src/DMI) chứa hệ thống Debug Module tuân thủ chuẩn RISC-V Debug Specification v0.13.2:
+
+- `dm_defines.v`: Định nghĩa địa chỉ DMI, bitfield `dmcontrol`, `dmstatus`, `abstractcs`, `command`, `dcsr`.
+- `dm_dmi_interface.v`: Handshake bus DMI (`valid/ready`, `op`, `resp`) kết nối DTM (JTAG).
+- `dm_csrs.v`: Bảng thanh ghi CSR của DM (`data0`, `dmcontrol`, `dmstatus`, `hartinfo`, `haltsum0`, `abstractcs`, `abstractauto`).
+- `dm_hart_ctrl.v`: Quản lý trạng thái Hart (`core_debug_req_o`, `core_debug_resume_req_o`, `resethaltreq`, `ndmreset`, `cause`).
+- `dm_abstract_cmd.v`: Abstract Command Engine thực thi lệnh Access Register đọc/ghi GPR `x0..x31`, `dpc`, `dcsr`.
+- `debug_module.v`: Top module kết nối DMI và Core Debug Interface.
+- `DMI_if.sv`: SystemVerilog wrapper module.
+- `debug_module_tb.v`: Testbench tự kiểm tra 14 kịch bản chuẩn (14 PASS / 0 FAIL).
+
+### Khối Control and Status Registers (CSR) và chuẩn Zicsr
+
+Folder [`00_src/CSR`](00_src/CSR) chứa hệ thống CSR Unit tuân thủ chuẩn RISC-V Privileged Specification v1.12 và mở rộng Zicsr:
+
+- `csr_defines.v`: Định nghĩa địa chỉ CSR chuẩn (`mstatus`, `misa`, `mie`, `mtvec`, `mscratch`, `mepc`, `mcause`, `mtval`, `mip`, `mcycle`, `minstret`, info CSRs), mã opcode funct3 Zicsr, mã ngoại lệ và ngắt.
+- `csr_registers.v`: Lưu trữ các thanh ghi Machine mode vật lý, WARL masking, đọc tổ hợp, cập nhật tuần tự theo độ ưu tiên (Trap > MRET > CSR Write).
+- `csr_unit.v`: Top-level CSR Unit giải mã nguyên tử Zicsr (RW/RS/RC/RWI/RSI/RCI), phát hiện illegal instruction, phân xử ưu tiên ngắt (`MEIP > MSIP > MTIP`), tính vector nhảy bẫy (Direct / Vectored).
+- `CSR_if.sv`: SystemVerilog wrapper module đồng bộ với chuẩn repository.
+- `csr_tb.v`: Testbench tự kiểm chứng 27 kịch bản chuẩn (27 PASS / 0 FAIL).
+
 ## Môi trường kiểm thử
 
 | Testbench/flow | Vị trí | Mục đích | Trạng thái |
@@ -264,6 +295,8 @@ trong README gốc này được ưu tiên cho source hiện tại và phần t�
 | `tage_provider_selector_tb` | `00_src/TAGE/tb` | Provider/alternate priority | Chưa chạy lại |
 | `tage_tagged_table_tb` | `00_src/TAGE/tb` | Tag, counter, usefulness, aging và ASIC reset | Chưa chạy lại |
 | `tage_predictor_tb` | `00_src/TAGE/tb` | Regression tích hợp Compact TAGE | Chưa chạy lại |
+| `debug_module_tb` | `00_src/DMI/tb` | Self-checking DMI, Halt/Resume, Abstract Command GPR/DPC, Error handling | 14 PASS / 0 FAIL |
+| `csr_tb` | `00_src/CSR/tb` | Self-checking Zicsr RW/RS/RC, Illegal detection, Trap/MRET, Vectored IRQ, Perf counters | 27 PASS / 0 FAIL |
 | Verilator C++ harness | `04_testbench/verilator` | Wrapper và waveform phía C++ | Đường dẫn Makefile/filelist hiện cần sửa |
 
 Folder `04_testbench/uvm` chỉ mô phỏng cấu trúc UVM cơ bản. Nó không import
@@ -357,9 +390,19 @@ RISCV32I/
 │   │   ├── cache_backing_memory.v
 │   │   ├── cache_l1_tb.v
 │   │   └── cache_filelist.f
-│   └── TAGE/
+│   ├── TAGE/
+│   │   ├── rtl/
+│   │   └── tb/
+│   ├── DMI/
+│   │   ├── rtl/
+│   │   ├── tb/
+│   │   ├── DMI_if.sv
+│   │   └── README.md
+│   └── CSR/
 │       ├── rtl/
-│       └── tb/
+│       ├── tb/
+│       ├── CSR_if.sv
+│       └── README.md
 ├── 01_data_mem/
 │   ├── IMEM.mem
 │   └── DMEM.mem
